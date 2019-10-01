@@ -26,7 +26,7 @@ module.exports = (RequestEngine) => {
                 try {
                     let data = false, $seen = false;
                     const busboy = new Busboy({
-                        headers: req.headers,
+                        headers: req["headers"],
                         limits: {
                             files: 1,
                             fileSize: $opts.size
@@ -50,6 +50,7 @@ module.exports = (RequestEngine) => {
                             data['tmpPath'] = saveTo;
 
                             const stream = fs.createWriteStream(saveTo);
+
                             file.pipe(stream);
 
                             file.on('limit', () => {
@@ -73,6 +74,7 @@ module.exports = (RequestEngine) => {
                             file.on('data', ($data) => {
                                 data['size'] = $data.length;
                             });
+
                         } else {
                             file.resume()
                         }
@@ -80,6 +82,11 @@ module.exports = (RequestEngine) => {
 
                     busboy.on('finish', () => {
                         if (typeof data === 'object') {
+                            if (data.tmpPath && fs.existsSync(data.tmpPath)) {
+                                // Get size of file.
+                                data['size'] = fs.statSync(data.tmpPath).size;
+                            }
+
                             resolve(new File(data));
                         } else {
                             resolve(new File({

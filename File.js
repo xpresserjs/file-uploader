@@ -95,6 +95,37 @@ class File {
     }
 
     /**
+     * Check if extension is string or is included array provided.
+     *
+     * e.g file.extensionMatch('png')
+     * @param $extension
+     */
+    extensionMatch($extension) {
+        if (typeof $extension === 'string') {
+            return $extension === this.extension();
+        } else if (Array.isArray($extension)) {
+            return $extension.includes(this.extension());
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if dotExtension is string or is included array provided.
+     *
+     * e.g file.dotExtensionMatch('.png')
+     * @param $extension
+     */
+    dotExtensionMatch($extension) {
+        if (typeof $extension === 'string') {
+            return $extension === this.dotExtension();
+        } else if (Array.isArray($extension)) {
+            return $extension.includes(this.dotExtension());
+        }
+        return false;
+    }
+
+    /**
      * Save file to path.
      * must me used with await e.g
      *
@@ -103,10 +134,26 @@ class File {
      * Moves file from tmpPath to path specified.
      * Path specified will be created if not exists.
      *
-     * @param $path
+     * @param $folder
+     * @param $opts
      * @returns {Promise<boolean>}
      */
-    saveTo($path = undefined) {
+    saveTo($folder = undefined, $opts = {}) {
+
+        // If type $folder is object we assume is the option that is being passed.
+        if (typeof $folder === "object") {
+            $opts = $folder;
+            $folder = undefined;
+        }
+
+        // Set Default options
+        $opts = Object.assign({
+            name: undefined,
+            overwrite: true,
+            prependExtension: false,
+        }, $opts);
+
+
         return new Promise((resolve) => {
             /**
              * If tmpPath is defined, proceed else record a tmpPath not defined error.
@@ -120,18 +167,44 @@ class File {
                 }
 
 
-                // Set default path to xpresser storage folder if $path is undefined
-                if ($path === undefined) {
-                    $path = $.path.storage();
+                // Set default path to xpresser storage folder if $folder is undefined
+                if ($folder === undefined) {
+                    $folder = $.path.storage();
                 }
 
-                // Make destination folder if not exists.
-                PathHelper.makeDirIfNotExist($path);
-                $path = path.resolve($path, this.name);
+                let fileName = this.name;
 
+                /**
+                 * Check if user has name defined in options.
+                 *
+                 * if true, we also check the length and prepend extension to file name.
+                 * if prependExtension = true in options
+                 */
+                if ($opts.name) {
+                    $opts.name = String($opts.name);
+
+                    if (String($opts.name).length) {
+                        if ($opts.prependExtension) {
+                            fileName = $opts.name + this.dotExtension();
+                        } else {
+                            fileName = $opts.name;
+                        }
+                    }
+                }
+
+                const filePath = path.resolve($folder, fileName);
+
+                // Make destination folder if not exists.
+                PathHelper.makeDirIfNotExist(filePath, true);
+
+                let flags = null;
+
+                if (!$opts.overwrite) {
+                    flags = fs.constants.COPYFILE_EXCL;
+                }
 
                 // Copy File to destination folder.
-                fs.copyFile(this.tmpPath, $path, (err) => {
+                fs.copyFile(this.tmpPath, filePath, flags, (err) => {
 
                     // Record error and return false.
                     if (err) {
@@ -141,13 +214,14 @@ class File {
 
                     // set Path and set copied to true.
                     this.stats.copied = true;
-                    this.path = $path;
+                    this.path = filePath;
 
                     // Delete file from temp folder.
                     this.deleteFromTmpDir();
 
                     return resolve(true);
                 });
+
             } else {
                 this.stats.error = 'tmpPath not defined.';
                 return resolve(false);
@@ -208,6 +282,24 @@ class File {
     saveError() {
         return this.stats.error;
     }
+
+    /**
+     * Convert string to human readable text
+     * e.g 1MB, 45GB
+     * @param decimals
+     * @returns {string|*}
+     */
+    sizeToString(decimals=0) {
+        const bytes = this.size;
+        if (bytes === 0) return '0Bytes';
+
+        const k = 1024,
+            dm = decimals <= 0 ? 0 : decimals || 2,
+            sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
+            i = Math.floor(Math.log(bytes) / Math.log(k));
+
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + sizes[i];
+    }
 }
 
 File.prototype.name = undefined;
@@ -215,7 +307,6 @@ File.prototype.input = undefined;
 File.prototype.encoding = undefined;
 File.prototype.mimetype = undefined;
 File.prototype.size = 0;
-File.prototype.file = undefined;
 File.prototype.expectedInput = undefined;
 File.prototype.path = undefined;
 File.prototype.tmpPath = undefined;
