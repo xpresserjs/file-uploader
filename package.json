@@ -1,6 +1,6 @@
 {
   "name": "@xpresser/file-uploader",
-  "version": "1.0.1",
+  "version": "0.1.0",
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
@@ -8,5 +8,6 @@
   },
   "devDependencies": {
     "xpresser": "^0.1.30"
-  }
+  },
+  "private": false
 }
