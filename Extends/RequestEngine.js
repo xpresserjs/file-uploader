@@ -6,7 +6,6 @@ const Busboy = require('busboy'),
 
 module.exports = (RequestEngine) => {
     return class extends RequestEngine {
-
         file($key, $opts = {}) {
             $opts = Object.assign({
                 size: 1

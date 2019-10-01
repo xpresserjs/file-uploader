@@ -96,6 +96,9 @@ class File {
 
     /**
      * Save file to path.
+     * must me used with await e.g
+     *
+     * await file.saveTo();
      *
      * Moves file from tmpPath to path specified.
      * Path specified will be created if not exists.
