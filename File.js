@@ -215,6 +215,7 @@ class File {
                     // set Path and set copied to true.
                     this.stats.copied = true;
                     this.path = filePath;
+                    this.name = fileName;
 
                     // Delete file from temp folder.
                     this.deleteFromTmpDir();
