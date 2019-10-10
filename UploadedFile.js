@@ -9,7 +9,7 @@ const PathHelper = require('xpresser/dist/src/Helpers/Path');
 const mime2ext = require('./mime2ext');
 
 
-class File {
+class UploadedFile {
     /**
      * Accept all needed data from file process
      * @param {object} data
@@ -33,11 +33,11 @@ class File {
     }
 
     /**
-     * File Error.
+     * UploadedFile Error.
      *
      * Runs various checks on data provided to know if there are any errors.
      * If there are no errors `false` is returned.
-     * @returns {object|boolean}
+     * @returns {{expected: *, received: *, type: string, message: string}|{expected: *, received: Object.input, type: string, message: string}|{type: string, message: string}|boolean}
      */
     error() {
 
@@ -224,7 +224,7 @@ class File {
                     flags = fs.constants.COPYFILE_EXCL;
                 }
 
-                // Copy File to destination folder.
+                // Copy UploadedFile to destination folder.
                 fs.copyFile(this.tmpPath, filePath, flags, (err) => {
 
                     // Record error and return false.
@@ -324,21 +324,21 @@ class File {
     }
 }
 
-File.prototype.name = undefined;
-File.prototype.input = undefined;
-File.prototype.encoding = undefined;
-File.prototype.mimetype = undefined;
-File.prototype.size = 0;
-File.prototype.expectedInput = undefined;
-File.prototype.expectedMimetype = undefined;
-File.prototype.path = undefined;
-File.prototype.tmpPath = undefined;
-File.prototype.reachedLimit = false;
-File.prototype.stats = {
+UploadedFile.prototype.name = undefined;
+UploadedFile.prototype.input = undefined;
+UploadedFile.prototype.encoding = undefined;
+UploadedFile.prototype.mimetype = undefined;
+UploadedFile.prototype.size = 0;
+UploadedFile.prototype.expectedInput = undefined;
+UploadedFile.prototype.expectedMimetype = undefined;
+UploadedFile.prototype.path = undefined;
+UploadedFile.prototype.tmpPath = undefined;
+UploadedFile.prototype.reachedLimit = false;
+UploadedFile.prototype.stats = {
     copied: false,
     moved: false,
     movedTo: null,
     error: false
 };
 
-module.exports = File;
+module.exports = UploadedFile;

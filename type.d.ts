@@ -10,7 +10,7 @@ declare namespace XpresserHttp {
         }): Promise<XpresserHttp.File>
     }
 
-    interface File {
+    class File {
         // File name
         name: string;
         // Input holding file.
@@ -42,7 +42,7 @@ declare namespace XpresserHttp {
         /**
          * Get extension using files mimetype.
          * Returns false if mimetype is not found.
-         * @returns {*|boolean}
+         * @returns {string}
          */
         extension(): string;
 
@@ -60,7 +60,7 @@ declare namespace XpresserHttp {
          * E.g
          * file.extension() => 'png'
          * file.dotExtension() => '.png'
-         * @returns {string|boolean}
+         * @returns {string}
          */
         dotExtension(): string;
 
@@ -81,7 +81,6 @@ declare namespace XpresserHttp {
          * Moves file from tmpPath to path specified.
          * Path specified will be created if not exists.
          *
-         * @param $folder
          * @param $options
          * @returns {Promise<boolean>}
          */
@@ -91,6 +90,19 @@ declare namespace XpresserHttp {
             prependExtension?: boolean,
         }): Promise<boolean>;
 
+        /**
+         * Save file to path.
+         * must me used with await e.g
+         *
+         * await file.saveTo();
+         *
+         * Moves file from tmpPath to path specified.
+         * Path specified will be created if not exists.
+         *
+         * @param $folder
+         * @param $options
+         * @returns {Promise<boolean>}
+         */
         saveTo($folder?: string, $options?: {
             name?: string,
             overwrite?: boolean,
@@ -135,7 +147,7 @@ declare namespace XpresserHttp {
          * Convert string to human readable text
          * e.g 1MB, 45GB
          * @param decimals
-         * @returns {string|*}
+         * @returns {string}
          */
         sizeToString(decimals?: number): string;
     }

@@ -2,7 +2,7 @@ const Busboy = require('busboy');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const File = require("../File");
+const UploadedFile = require("../UploadedFile");
 
 /**
  * RequestEngine Extender
@@ -171,13 +171,13 @@ module.exports = (RequestEngine) => {
                                 // Get size of file.
                                 $data['size'] = fs.statSync($data.tmpPath).size;
                             }
-                            resolve(new File($data));
+                            resolve(new UploadedFile($data));
                         } else {
                             /**
                              * Else if no $data then we did not find the input the user defined.
                              * The add the expectedInput key, The File class records an error once this key is found.
                              */
-                            resolve(new File({
+                            resolve(new UploadedFile({
                                 expectedInput: $key
                             }));
                         }
