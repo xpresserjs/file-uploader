@@ -37,7 +37,7 @@ declare namespace XpresserHttp {
          * Runs various checks on data provided to know if there are any errors.
          * If there are no errors `false` is returned.
          */
-        error(): { type?: string, message?: string, expected: string, received: string } | boolean;
+        error(): { type: string, message: string, expected?: string, received?: string } | boolean;
 
         /**
          * Get extension using files mimetype.
