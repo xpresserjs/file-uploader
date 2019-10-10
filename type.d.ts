@@ -4,7 +4,10 @@ declare namespace XpresserHttp {
          * Get file from post request.
          * @return {Promise<XpresserHttp.File>}
          */
-        file(key: string, $options?: { size?: number }): Promise<XpresserHttp.File>
+        file(key: string, $options?: {
+            size?: number,
+            mimetype?: string | RegExp,
+        }): Promise<XpresserHttp.File>
     }
 
     interface File {
@@ -33,9 +36,8 @@ declare namespace XpresserHttp {
          *
          * Runs various checks on data provided to know if there are any errors.
          * If there are no errors `false` is returned.
-         * @returns {string|boolean}
          */
-        error(): string | boolean;
+        error(): { type?: string, message?: string, expected: string, received: string } | boolean;
 
         /**
          * Get extension using files mimetype.

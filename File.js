@@ -28,6 +28,7 @@ class File {
         this.mimetype = data.mimetype || undefined;
         this.size = data.size || 0;
         this.expectedInput = data.expectedInput || undefined;
+        this.expectedMimetype = data.expectedMimetype || undefined;
         this.reachedLimit = data.reachedLimit || false;
     }
 
@@ -36,29 +37,50 @@ class File {
      *
      * Runs various checks on data provided to know if there are any errors.
      * If there are no errors `false` is returned.
-     * @returns {string|boolean}
+     * @returns {object|boolean}
      */
     error() {
 
         /**
          * --- Rules
-         * 1. If expectedInput and the input received is not the same
+         * 1. if expectedMimetype exits it means that the file did not meet
+         * the mimetype rule set by the user.
+         *
+         * 2. If expectedInput and the input received is not the same
          * we record an Input not found error.
          *
-         * 2. if no file is received, busboy returns and empty name and size.
+         * 3. if no file is received, busboy returns and empty name and size.
          * so we check if name and size is undefined, if true,
          * we record a No file found error.
          *
-         * 3. if file reached the set file size limit,
+         * 4. if file reached the set file size limit,
          * we record a file limit error.
          */
 
-        if (this.expectedInput !== this.input) {
-            return `Input not found: ${this.expectedInput}`
+        if (this.expectedMimetype) {
+            return {
+                type: 'mimetype',
+                expected: this.expectedMimetype,
+                received: this.mimetype,
+                message: `Expected mimetype does not match file mimetype: ${this.mimetype}`
+            };
+        } else if (this.expectedInput !== this.input) {
+            return {
+                type: 'input',
+                expected: this.expectedInput,
+                received: this.input,
+                message: `Input not found: ${this.expectedInput}`
+            }
         } else if (this.input && !this.name && !this.size) {
-            return `No file found for input: ${this.input}`
+            return {
+                type: 'file',
+                message: `No file found for input: ${this.input}`
+            }
         } else if (this.reachedLimit) {
-            return `File too large!`
+            return {
+                type: 'size',
+                message: `File too large.`
+            }
         }
 
         return false;
@@ -290,7 +312,7 @@ class File {
      * @param decimals
      * @returns {string|*}
      */
-    sizeToString(decimals=0) {
+    sizeToString(decimals = 0) {
         const bytes = this.size;
         if (bytes === 0) return '0Bytes';
 
@@ -309,6 +331,7 @@ File.prototype.encoding = undefined;
 File.prototype.mimetype = undefined;
 File.prototype.size = 0;
 File.prototype.expectedInput = undefined;
+File.prototype.expectedMimetype = undefined;
 File.prototype.path = undefined;
 File.prototype.tmpPath = undefined;
 File.prototype.reachedLimit = false;

@@ -1,14 +1,27 @@
-const Busboy = require('busboy'),
-    fs = require('fs'),
-    os = require('os'),
-    path = require('path'),
-    File = require("../File");
+const Busboy = require('busboy');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const File = require("../File");
 
+/**
+ * RequestEngine Extender
+ * @param RequestEngine
+ */
 module.exports = (RequestEngine) => {
     return class extends RequestEngine {
+        /**
+         * Single File Upload
+         * @param $key
+         * @param $opts
+         * @returns {Promise<unknown>}
+         */
         file($key, $opts = {}) {
+
+            // Assign default option values.
             $opts = Object.assign({
-                size: 1
+                size: 10,
+                mimetype: false
             }, $opts);
 
 
@@ -19,12 +32,24 @@ module.exports = (RequestEngine) => {
 
             return new Promise((resolve, reject) => {
 
-                if (req.method.toLowerCase() !== "post") {
-                    return resolve(false);
-                }
-
                 try {
-                    let data = false, $seen = false;
+                    /**
+                     * $data holds this process data.
+                     * @type {object|boolean}
+                     */
+                    let $data = false;
+                    /**
+                     * $seen checks if field has been found to stop process once it is
+                     * @type {boolean}
+                     */
+                    let $seen = false;
+
+                    /**
+                     * Initialize busboy
+                     *
+                     * passing req.headers and setting limits
+                     * @type {Busboy}
+                     */
                     const busboy = new Busboy({
                         headers: req["headers"],
                         limits: {
@@ -33,47 +58,106 @@ module.exports = (RequestEngine) => {
                         }
                     });
 
+
+                    // On Busboy file event we validate incoming file.
                     busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
 
+                        // if seen and fieldname matches the field we are looking for.
                         if (!$seen && fieldname === $key) {
+                            // Set seen to true, so if another file event is received it will be ignored.
                             $seen = true;
-                            data = {
+
+                            // Set default data attributes.
+                            $data = {
                                 expectedInput: $key,
                                 input: fieldname,
                                 name: String(filename).trim().length ? filename : undefined,
                                 encoding,
                                 mimetype,
+                                size: 0
                             };
 
-                            const tmpName = 'xpresser_' + $.helpers.randomStr(50).toUpperCase();
-                            const saveTo = path.join(os.tmpdir(), tmpName);
-                            data['tmpPath'] = saveTo;
+                            /**
+                             * check if mimetype is valid.
+                             *
+                             * By default it is false,
+                             * but if user did not define and mimetype rule it is set to true.
+                             *
+                             * @type {boolean}
+                             */
+                            let mimeTypeIsValid = false;
+                            if ($opts.mimetype) {
+                                /**
+                                 * Expected mimetype is the mimetype option set.
+                                 *
+                                 * The option expects a string to or a regex expression to test with.
+                                 * @type {string|RegExp}
+                                 */
+                                const expectedMimeType = $opts.mimetype;
 
-                            const stream = fs.createWriteStream(saveTo);
-
-                            file.pipe(stream);
-
-                            file.on('limit', () => {
-                                data["reachedLimit"] = true;
-
-                                // Unpipe and destroy steam.
-                                file.unpipe();
-                                stream.destroy();
-
-                                // try un-linking file
-                                try {
-                                    fs.unlinkSync(saveTo);
-                                } catch (e) {
-                                    // do nothing but log error
-                                    $.logError(e);
+                                /**
+                                 * - Check if mimetype option is a regex expression
+                                 * if true and regex test is true set mimeTypeIsValid = true
+                                 *
+                                 * - else if mimetype option is a string we check if option is in mimetype
+                                 * if true set mimeTypeIsValid = true
+                                 */
+                                if (expectedMimeType instanceof RegExp && expectedMimeType.test(mimetype)) {
+                                    mimeTypeIsValid = true;
+                                } else if (typeof expectedMimeType === 'string' && mimetype.includes(expectedMimeType)) {
+                                    mimeTypeIsValid = true;
                                 }
+                            } else {
+                                mimeTypeIsValid = true;
+                            }
 
+
+                            // if mimetype is valid, move file to temp folder.
+                            if (mimeTypeIsValid) {
+                                // Create random file name.
+                                const tmpName = 'xpresser_' + $.helpers.randomStr(50).toUpperCase();
+                                // Get OS tmpDir
+                                const saveTo = path.join(os.tmpdir(), tmpName);
+                                // Add tmpPath to $data
+                                $data['tmpPath'] = saveTo;
+
+                                // Create File Stream
+                                const stream = fs.createWriteStream(saveTo);
+                                file.pipe(stream);
+
+                                /**
+                                 * On Busboy file limit event we try to unpipe, destroy stream and unlink file.
+                                 */
+                                file.on('limit', () => {
+                                    $data["reachedLimit"] = true;
+
+                                    try {
+                                        // try unpipe and destroy steam.
+                                        file.unpipe();
+                                        stream.destroy();
+
+                                        // try un-linking file
+                                        fs.unlinkSync(saveTo);
+                                    } catch (e) {
+                                        // do nothing but log error
+                                        $.logError(e);
+                                    }
+
+                                    file.resume();
+                                });
+
+                                // Update size on each data event received
+                                file.on('data', ($data) => {
+                                    $data['size'] = $data.length;
+                                });
+                            } else {
+                                /**
+                                 * If mimetype is not valid we set the expectedMimetype value
+                                 * The File class records an error once this key is found.
+                                 */
+                                $data['expectedMimetype'] = String($opts.mimetype);
                                 file.resume();
-                            });
-
-                            file.on('data', ($data) => {
-                                data['size'] = $data.length;
-                            });
+                            }
 
                         } else {
                             file.resume()
@@ -81,14 +165,18 @@ module.exports = (RequestEngine) => {
                     });
 
                     busboy.on('finish', () => {
-                        if (typeof data === 'object') {
-                            if (data.tmpPath && fs.existsSync(data.tmpPath)) {
+                        if (typeof $data === 'object') {
+                            // if tmpPath Exists in $data we update file size
+                            if ($data.tmpPath && fs.existsSync($data.tmpPath)) {
                                 // Get size of file.
-                                data['size'] = fs.statSync(data.tmpPath).size;
+                                $data['size'] = fs.statSync($data.tmpPath).size;
                             }
-
-                            resolve(new File(data));
+                            resolve(new File($data));
                         } else {
+                            /**
+                             * Else if no $data then we did not find the input the user defined.
+                             * The add the expectedInput key, The File class records an error once this key is found.
+                             */
                             resolve(new File({
                                 expectedInput: $key
                             }));
