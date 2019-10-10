@@ -56,15 +56,7 @@ class File {
          * 4. if file reached the set file size limit,
          * we record a file limit error.
          */
-
-        if (this.expectedMimetype) {
-            return {
-                type: 'mimetype',
-                expected: this.expectedMimetype,
-                received: this.mimetype,
-                message: `Expected mimetype does not match file mimetype: ${this.mimetype}`
-            };
-        } else if (this.expectedInput !== this.input) {
+        if (this.expectedInput !== this.input) {
             return {
                 type: 'input',
                 expected: this.expectedInput,
@@ -81,6 +73,13 @@ class File {
                 type: 'size',
                 message: `File too large.`
             }
+        } else if (this.expectedMimetype) {
+            return {
+                type: 'mimetype',
+                expected: this.expectedMimetype,
+                received: this.mimetype,
+                message: `Expected mimetype does not match file mimetype: ${this.mimetype}`
+            };
         }
 
         return false;
