@@ -7,6 +7,7 @@ declare namespace XpresserHttp {
         file(key: string, $options?: {
             size?: number,
             mimetype?: string | RegExp,
+            extensions?: string[] | { accept?: string[], reject?: string[] }
         }): Promise<XpresserHttp.File>
     }
 

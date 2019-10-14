@@ -15,6 +15,8 @@ class UploadedFile {
      * @param {object} data
      */
     constructor(data) {
+        const exts = data.expectedExtensions;
+
         if (typeof data.input === "string" && data.input.length) {
             this.input = data.input;
         }
@@ -29,6 +31,7 @@ class UploadedFile {
         this.size = data.size || 0;
         this.expectedInput = data.expectedInput || undefined;
         this.expectedMimetype = data.expectedMimetype || undefined;
+        this.expectedExtensions = (Array.isArray(exts) && exts.length) ? exts : [];
         this.reachedLimit = data.reachedLimit || false;
     }
 
@@ -43,18 +46,21 @@ class UploadedFile {
 
         /**
          * --- Rules
-         * 1. if expectedMimetype exits it means that the file did not meet
-         * the mimetype rule set by the user.
-         *
-         * 2. If expectedInput and the input received is not the same
+         * 1. If expectedInput and the input received is not the same
          * we record an Input not found error.
          *
-         * 3. if no file is received, busboy returns and empty name and size.
+         * 2. if no file is received, busboy returns and empty name and size.
          * so we check if name and size is undefined, if true,
          * we record a No file found error.
          *
-         * 4. if file reached the set file size limit,
+         * 3. if file reached the set file size limit,
          * we record a file limit error.
+         *
+         * 4. if expectedMimetype exits it means that the file did not meet
+         * the mimetype rule set by the user.
+         *
+         * 5. if expectedExtensions does not extension,
+         * we record Unsupported file extension error
          */
         if (this.expectedInput !== this.input) {
             return {
@@ -80,7 +86,16 @@ class UploadedFile {
                 received: this.mimetype,
                 message: `Expected mimetype does not match file mimetype: ${this.mimetype}`
             };
+        } else if (this.expectedExtensions.length && !this.extensionMatch(this.expectedExtensions)) {
+            const received = this.extension();
+            return {
+                type: 'extensions',
+                expected: this.expectedExtensions,
+                received,
+                message: `Unsupported file extension: ${received}`
+            };
         }
+
 
         return false;
     }
@@ -331,6 +346,7 @@ UploadedFile.prototype.mimetype = undefined;
 UploadedFile.prototype.size = 0;
 UploadedFile.prototype.expectedInput = undefined;
 UploadedFile.prototype.expectedMimetype = undefined;
+UploadedFile.prototype.expectedExtensions = [];
 UploadedFile.prototype.path = undefined;
 UploadedFile.prototype.tmpPath = undefined;
 UploadedFile.prototype.reachedLimit = false;

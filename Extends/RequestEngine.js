@@ -3,6 +3,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const UploadedFile = require("../UploadedFile");
+const mime2ext = require("../mime2ext");
 
 /**
  * RequestEngine Extender
@@ -86,14 +87,16 @@ module.exports = (RequestEngine) => {
                              * @type {boolean}
                              */
                             let mimeTypeIsValid = false;
-                            if ($opts.mimetype) {
-                                /**
-                                 * Expected mimetype is the mimetype option set.
-                                 *
-                                 * The option expects a string to or a regex expression to test with.
-                                 * @type {string|RegExp}
-                                 */
-                                const expectedMimeType = $opts.mimetype;
+
+                            /**
+                             * Expected mimetype is the mimetype option set.
+                             *
+                             * The option expects a string to or a regex expression to test with.
+                             * @type {string|RegExp}
+                             */
+                            const expectedMimeType = $opts.mimetype;
+
+                            if (expectedMimeType) {
 
                                 /**
                                  * - Check if mimetype option is a regex expression
@@ -111,9 +114,26 @@ module.exports = (RequestEngine) => {
                                 mimeTypeIsValid = true;
                             }
 
+                            /**
+                             * Check for expected extensions.
+                             *
+                             * if file extension using mimetype matches array of extensions provided.
+                             * @type {boolean}
+                             */
+                            let extensionIsValid = false;
+                            const expectedExtensions = $opts.extensions;
 
-                            // if mimetype is valid, move file to temp folder.
-                            if (mimeTypeIsValid) {
+                            if (expectedExtensions && Array.isArray(expectedExtensions) && expectedExtensions.length) {
+                                $data['expectedExtensions'] = expectedExtensions;
+                                const extByMimetype = mime2ext[mimetype] || false;
+                                extensionIsValid = !!(extByMimetype && expectedExtensions.includes(extByMimetype));
+                            } else {
+                                extensionIsValid = true;
+                            }
+
+
+                            // if mimetype and extensions is valid, move file to temp folder.
+                            if (mimeTypeIsValid && extensionIsValid) {
                                 // Create random file name.
                                 const tmpName = 'xpresser_' + $.helpers.randomStr(50).toUpperCase();
                                 // Get OS tmpDir
@@ -155,7 +175,17 @@ module.exports = (RequestEngine) => {
                                  * If mimetype is not valid we set the expectedMimetype value
                                  * The File class records an error once this key is found.
                                  */
-                                $data['expectedMimetype'] = String($opts.mimetype);
+                                if (!mimeTypeIsValid)
+                                    $data['expectedMimetype'] = String($opts.mimetype);
+
+                                /**
+                                 * If extensions is not valid we set the expectedExtensions value
+                                 * The File class records an error once this key is found.
+                                 */
+                                if (!extensionIsValid)
+                                    $data['expectedExtensions'] = expectedExtensions;
+
+                                // Resume file upload.
                                 file.resume();
                             }
 
