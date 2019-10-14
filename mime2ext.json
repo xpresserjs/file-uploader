@@ -521,7 +521,7 @@
   "image/jpeg": "jpg",
   "image/png": "png",
   "image/prs.btif": "btif",
-  "image/svg+xml": "svgz",
+  "image/svg+xml": "svg",
   "image/tiff": "tiff",
   "image/vnd.adobe.photoshop": "psd",
   "image/vnd.djvu": "djvu",
