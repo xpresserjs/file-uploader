@@ -533,6 +533,7 @@
   "image/vnd.fujixerox.edmics-mmr": "mmr",
   "image/vnd.fujixerox.edmics-rlc": "rlc",
   "image/vnd.ms-modi": "mdi",
+  "image/vnd.microsoft.icon": "ico",
   "image/vnd.net-fpx": "npx",
   "image/vnd.wap.wbmp": "wbmp",
   "image/vnd.xiff": "xif",
