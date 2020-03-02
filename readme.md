@@ -1,5 +1,5 @@
 # Xpresser File Uploader
-Note: Xpresser also supports all express supported file handling libraries.
+Note: XpresserJs also supports all express supported file handling libraries.
 
 Built on [busboy](https://npmjs.com/package/busboy), an easy plugin to handle file uploads from form request to your application storage folder.
 
