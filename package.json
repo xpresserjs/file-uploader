@@ -1,6 +1,6 @@
 {
   "name": "@xpresser/file-uploader",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "main": "index.js",
   "description": "File uploader for XpresserJs framework",
   "license": "MIT",
