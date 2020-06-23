@@ -15,7 +15,7 @@ class UploadedFile {
      * @param {object} data
      */
     constructor(data) {
-        const exts = data.expectedExtensions;
+        const extensions = data.expectedExtensions;
 
         if (typeof data.input === "string" && data.input.length) {
             this.input = data.input;
@@ -31,7 +31,7 @@ class UploadedFile {
         this.size = data.size || 0;
         this.expectedInput = data.expectedInput || undefined;
         this.expectedMimetype = data.expectedMimetype || undefined;
-        this.expectedExtensions = (Array.isArray(exts) && exts.length) ? exts : [];
+        this.expectedExtensions = (Array.isArray(extensions) && extensions.length) ? extensions : [];
         this.reachedLimit = data.reachedLimit || false;
     }
 
@@ -49,7 +49,7 @@ class UploadedFile {
          * 1. If expectedInput and the input received is not the same
          * we record an Input not found error.
          *
-         * 2. if no file is received, busboy returns and empty name and size.
+         * 2. if no file is received, busboy returns  empty name and size.
          * so we check if name and size is undefined, if true,
          * we record a No file found error.
          *
@@ -59,7 +59,7 @@ class UploadedFile {
          * 4. if expectedMimetype exits it means that the file did not meet
          * the mimetype rule set by the user.
          *
-         * 5. if expectedExtensions does not extension,
+         * 5. if expectedExtensions does not match extension,
          * we record Unsupported file extension error
          */
         if (this.expectedInput !== this.input) {
@@ -96,7 +96,6 @@ class UploadedFile {
             };
         }
 
-
         return false;
     }
 
@@ -118,7 +117,6 @@ class UploadedFile {
      * @returns {string|boolean}
      */
     dotExtension() {
-
         /**
          * Get Extension,
          * Append '.' to mine if mine !== false
@@ -127,7 +125,6 @@ class UploadedFile {
         const mime = this.extension();
         if (mime) return '.' + mime;
         return false;
-
     }
 
     /**
@@ -330,10 +327,10 @@ class UploadedFile {
         const bytes = this.size;
         if (bytes === 0) return '0Bytes';
 
-        const k = 1024,
-            dm = decimals <= 0 ? 0 : decimals || 2,
-            sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
-            i = Math.floor(Math.log(bytes) / Math.log(k));
+        const k = 1024;
+        const dm = (decimals <= 0) ? 0 : decimals || 2;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
 
         return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + sizes[i];
     }

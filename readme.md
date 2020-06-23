@@ -32,16 +32,16 @@ In your view
 In your controller action
 
 ```javascript
-$.router.post('/upload', async (x) => {
+$.router.post('/upload', async (http) => {
 
     // Get File
-    const file = await x.file('avatar', {
+    const file = await http.file('avatar', {
         size: 1 // size in megabyte
     });
     
     // Check for error
     if(file.error()){
-        return x.res.send(file.error())
+        return http.res.send(file.error())
     }
     
     // Save File
@@ -49,11 +49,11 @@ $.router.post('/upload', async (x) => {
     
     // check for save error()
     if(!file.isSaved()){
-        return x.res.send(file.saveError());
+        return http.res.send(file.saveError());
     }
     
     // return file.
-    return x.res.send({
+    return http.res.send({
         file: file,
         msg: "File uploaded successfully!."   
     });

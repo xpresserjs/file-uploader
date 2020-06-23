@@ -29,6 +29,7 @@ module.exports = (RequestEngine) => {
             // Convert to bytes.
             $opts['size'] = $opts['size'] * 1000000;
 
+            // Current Request
             const req = this.req;
 
             return new Promise((resolve, reject) => {
@@ -194,6 +195,7 @@ module.exports = (RequestEngine) => {
                         }
                     });
 
+                    // On Busboy finish we return UploadedFile
                     busboy.on('finish', () => {
                         if (typeof $data === 'object') {
                             // if tmpPath Exists in $data we update file size
