@@ -43,7 +43,12 @@ class UploadedFile {
      * @returns {{expected: *, received: *, type: string, message: string}|{expected: *, received: Object.input, type: string, message: string}|{type: string, message: string}|boolean}
      */
     error() {
+        /**
+         * If cachedError is not null then this instance has saved an error before.
+         */
+        if (this.cachedError !== null) return this.cachedError;
 
+        let error = false;
         /**
          * --- Rules
          * 1. If expectedInput and the input received is not the same
@@ -63,24 +68,24 @@ class UploadedFile {
          * we record Unsupported file extension error
          */
         if (this.expectedInput !== this.input) {
-            return {
+            error = {
                 type: 'input',
                 expected: this.expectedInput,
                 received: this.input,
                 message: `Input not found: ${this.expectedInput}`
             }
         } else if (this.input && !this.name && !this.size) {
-            return {
+            error = {
                 type: 'file',
                 message: `No file found for input: ${this.input}`
             }
         } else if (this.reachedLimit) {
-            return {
+            error = {
                 type: 'size',
                 message: `File too large.`
             }
         } else if (this.expectedMimetype) {
-            return {
+            error = {
                 type: 'mimetype',
                 expected: this.expectedMimetype,
                 received: this.mimetype,
@@ -88,7 +93,7 @@ class UploadedFile {
             };
         } else if (this.expectedExtensions.length && !this.extensionMatch(this.expectedExtensions)) {
             const received = this.extension();
-            return {
+            error = {
                 type: 'extensions',
                 expected: this.expectedExtensions,
                 received,
@@ -96,7 +101,11 @@ class UploadedFile {
             };
         }
 
-        return false;
+        // Cache error so this check does not have to re-run
+        this.cachedError = error;
+
+        // Return error
+        return error;
     }
 
     /**
@@ -353,5 +362,6 @@ UploadedFile.prototype.stats = {
     movedTo: null,
     error: false
 };
+UploadedFile.prototype.cachedError = null
 
 module.exports = UploadedFile;

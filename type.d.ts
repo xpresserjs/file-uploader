@@ -17,6 +17,8 @@ declare class UploadedFile {
     tmpPath: string;
     // If file reached the max file size set.
     reachedLimit: boolean;
+    // Error of instance is saved here
+    private cachedError: null | object;
 
 
     /**
@@ -140,6 +142,38 @@ declare class UploadedFile {
     sizeToString(decimals?: number): string;
 }
 
+type FunctionReturnsString = (file: UploadedFile) => string;
+
+declare class UploadedFiles {
+    input: string;
+    files: UploadedFile[];
+
+    /**
+     * Checks if this instance has any file.
+     * @returns {boolean}
+     */
+    hasFiles(): boolean;
+
+    /**
+     * Checks if any file has error.
+     * @returns {boolean}
+     */
+    hasFilesWithErrors(): boolean;
+
+    /**
+     * Returns Array of files with error.
+     * @returns {UploadedFile[]}
+     */
+    filesWithError(): [] | UploadedFile[];
+
+    /**
+     * Save files
+     * @param $folder
+     * @param $options
+     */
+    saveFiles($folder?: string | FunctionReturnsString, $options?: object | FunctionReturnsString): Promise<boolean>;
+}
+
 declare namespace Xpresser {
     interface Http {
         /**
@@ -150,7 +184,18 @@ declare namespace Xpresser {
             size?: number,
             mimetype?: string | RegExp,
             extensions?: string[] | { accept?: string[], reject?: string[] }
-        }): Promise<UploadedFile>
+        }): Promise<UploadedFiles>
+
+        /**
+         * Get multiple files from post request.
+         * @return {Promise<UploadedFiles>}
+         */
+        files(key: string, $options?: {
+            files?: number
+            size?: number,
+            mimetype?: string | RegExp,
+            extensions?: string[] | { accept?: string[], reject?: string[] }
+        }): Promise<UploadedFiles>
     }
 }
 
