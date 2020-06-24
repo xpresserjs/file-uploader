@@ -4,24 +4,25 @@ Note: XpresserJs also supports all express supported file handling libraries.
 Built on [busboy](https://npmjs.com/package/busboy), an easy plugin to handle file uploads from form request to your application storage folder.
 
 
-## Install
+## Installation
+#### NPM
 ```sh
 npm install @xpresser/file-uploader
-
-// OR
-
+```
+#### YARN
+```sh
 yarn add @xpresser/file-uploader
 ```
 
+#### Your Project
 Add `npm://@xpresser/file-uploader` to your `plugins.json`,  if you don't have one create a new one in your base folder.
 ```json
 [
-  ...
   "npm://@xpresser/file-uploader"
 ]
 ```
 
-## Usage
+## Single File Upload
 In your view
 ```html
 <form action="/upload" enctype="multipart/form-data" method="POST">
@@ -29,8 +30,8 @@ In your view
     <input type="submit" value="Upload  your avatar"/>
 </form>
 ```
-In your controller action
 
+In your controller action
 ```javascript
 $.router.post('/upload', async (http) => {
 
@@ -45,17 +46,61 @@ $.router.post('/upload', async (http) => {
     }
     
     // Save File
-    await file.saveTo();
+    await file.saveTo('path/to/folder');
     
     // check for save error()
     if(!file.isSaved()){
         return http.res.send(file.saveError());
     }
     
-    // return file.
+    // return response.
     return http.res.send({
         file: file,
         msg: "File uploaded successfully!."   
+    });
+});
+```
+
+## Multiple Files Upload
+In your view
+```html
+<form action="/multiple_upload" enctype="multipart/form-data" method="POST">
+    Select images: <input type="file" accept="image/*" name="images" multiple>
+    <button type="submit">Upload your images</button>
+</form>
+```
+
+In your controller action
+```javascript
+$.router.post('/multiple_upload', async (http) => {
+    // Get Files
+    const images = await http.files('images', {
+        size: 1, // size in megabytes
+        mimetype: 'image'
+    });
+
+    // check errors
+    if (images.hasFilesWithErrors()) {
+        const filesWithErrors = images.filesWithError();
+
+        // Do something with filesWithErrors
+
+        return http.send({
+            message: 'Upload encountered some errors'
+        })
+    }   
+
+    // Save all files to one folder
+    await images.saveFiles('path/to/folder');
+
+    // Or save files to specific folder using conditions by passing a function
+    await images.saveFiles((file) => {
+        return 'path/to/images/' + file.extension();
+    });
+
+    // return response
+    return http.send({
+        message: `${images.files.length} files has been uploaded successfully!.`
     });
 });
 ```
