@@ -6,12 +6,13 @@ class UploadedFiles {
      */
     files = [];
 
-    constructor(input, files = []) {
+    constructor(input, files = [], body= {}) {
         if (!Array.isArray(files))
             throw TypeError(`UploadFiles expects files to be an Array`);
 
         this.input = input;
         this.files = files;
+        this.body = body;
     }
 
     /**
@@ -77,5 +78,7 @@ class UploadedFiles {
         });
     }
 }
+
+UploadedFiles.prototype.body = {}
 
 module.exports = UploadedFiles;

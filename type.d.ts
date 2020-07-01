@@ -180,21 +180,25 @@ declare namespace Xpresser {
          * Get file from post request.
          * @return {Promise<UploadedFile>}
          */
-        file(key: string, $options?: {
+        file(field: string, $options?: {
             size?: number,
             mimetype?: string | RegExp,
-            extensions?: string[] | { accept?: string[], reject?: string[] }
+            extensions?: string[],
+            includeBody?: boolean,
         }): Promise<UploadedFiles>
 
         /**
          * Get multiple files from post request.
          * @return {Promise<UploadedFiles>}
          */
-        files(key: string, $options?: {
+        files(field: string, $options?: {
             files?: number
             size?: number,
             mimetype?: string | RegExp,
-            extensions?: string[] | { accept?: string[], reject?: string[] }
+            extensions?: string[],
+            includeBody?: boolean,
+            mimetypeForEachField?: { [field: string]: string | RegExp },
+            extensionsForEachField?: { [field: string]: string[] }
         }): Promise<UploadedFiles>
     }
 }

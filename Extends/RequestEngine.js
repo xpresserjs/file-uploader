@@ -23,7 +23,9 @@ module.exports = (RequestEngine) => {
             // Assign default option values.
             $opts = Object.assign({
                 size: 10,
-                mimetype: false
+                mimetype: false,
+                includeBody: true,
+                extensions: false
             }, $opts);
 
 
@@ -48,6 +50,12 @@ module.exports = (RequestEngine) => {
                     let $seen = false;
 
                     /**
+                     * Populates body that comes with the request if $opts.includeBody === true
+                     * @type {{}}
+                     */
+                    let body = {};
+
+                    /**
                      * Initialize busboy
                      *
                      * passing req.headers and setting limits
@@ -60,6 +68,14 @@ module.exports = (RequestEngine) => {
                             fileSize: $opts.size
                         }
                     });
+
+
+                    // On Busboy field event we validate incoming field.
+                    if ($opts.includeBody) {
+                        busboy.on('field', (key, val) => {
+                            body[key] = val;
+                        })
+                    }
 
 
                     // On Busboy file event we validate incoming file.
@@ -199,7 +215,7 @@ module.exports = (RequestEngine) => {
                     // On Busboy finish we return UploadedFile
                     busboy.on('finish', () => {
                         if (typeof $data === 'object') {
-                            resolve(new UploadedFile($data));
+                            resolve(new UploadedFile($data, body));
                         } else {
                             /**
                              * Else if no $data then we did not find the input the user defined.
@@ -207,7 +223,7 @@ module.exports = (RequestEngine) => {
                              */
                             resolve(new UploadedFile({
                                 expectedInput: $key
-                            }));
+                            }, body));
                         }
                     });
 
@@ -226,11 +242,17 @@ module.exports = (RequestEngine) => {
          */
         files($key, $opts = {}) {
 
+            const keyIsArray = Array.isArray($key);
+
             // Assign default option values.
             $opts = Object.assign({
                 files: undefined,
                 size: 10,
-                mimetype: false
+                mimetype: false,
+                extensions: false,
+                includeBody: true,
+                mimeTypeForEachField: {},
+                extensionsForEachField: {}
             }, $opts);
 
 
@@ -240,8 +262,15 @@ module.exports = (RequestEngine) => {
             // Current Request
             const req = this.req;
 
+
             return new Promise((resolve, reject) => {
                 let files = [];
+
+                /**
+                 * Populates body that comes with the request if $opts.includeBody === true
+                 * @type {{}}
+                 */
+                let body = {};
 
                 try {
                     /**
@@ -259,6 +288,13 @@ module.exports = (RequestEngine) => {
                     });
 
 
+                    // On Busboy field event we validate incoming field.
+                    if ($opts.includeBody) {
+                        busboy.on('field', (key, val) => {
+                            body[key] = val;
+                        })
+                    }
+
                     // On Busboy file event we validate incoming file.
                     busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
                         /**
@@ -273,10 +309,10 @@ module.exports = (RequestEngine) => {
 
 
                         // if seen and fieldname matches the field we are looking for.
-                        if (fieldname === $key && filename) {
+                        if ((fieldname === $key || (keyIsArray && $key.includes(fieldname))) && filename) {
                             // Set default data attributes.
                             $data = {
-                                expectedInput: $key,
+                                expectedInput: fieldname,
                                 input: fieldname,
                                 name: String(filename).trim().length ? filename : undefined,
                                 encoding,
@@ -300,7 +336,10 @@ module.exports = (RequestEngine) => {
                              * The option expects a string to or a regex expression to test with.
                              * @type {string|RegExp}
                              */
-                            const expectedMimeType = $opts.mimetype;
+                            let expectedMimeType = $opts.mimetype;
+                            if (Object.keys($opts.mimeTypeForEachField).length && $opts.mimeTypeForEachField.hasOwnProperty(fieldname)) {
+                                expectedMimeType = $opts.mimeTypeForEachField[fieldname];
+                            }
 
                             if (expectedMimeType) {
 
@@ -327,7 +366,10 @@ module.exports = (RequestEngine) => {
                              * @type {boolean}
                              */
                             let extensionIsValid;
-                            const expectedExtensions = $opts.extensions;
+                            let expectedExtensions = $opts.extensions;
+                            if (Object.keys($opts.extensionsForEachField).length && $opts.extensionsForEachField.hasOwnProperty(fieldname)) {
+                                expectedExtensions = $opts.extensionsForEachField[fieldname];
+                            }
 
                             if (expectedExtensions && Array.isArray(expectedExtensions) && expectedExtensions.length) {
                                 $data['expectedExtensions'] = expectedExtensions;
@@ -387,7 +429,7 @@ module.exports = (RequestEngine) => {
                                  * The File class records an error once this key is found.
                                  */
                                 if (!mimeTypeIsValid)
-                                    $data['expectedMimetype'] = String($opts.mimetype);
+                                    $data['expectedMimetype'] = expectedMimeType;
 
                                 /**
                                  * If extensions is not valid we set the expectedExtensions value
@@ -408,7 +450,7 @@ module.exports = (RequestEngine) => {
                     });
 
                     // On Busboy finish we return UploadedFile
-                    busboy.on('finish', () => resolve(new UploadedFiles($key, files)));
+                    busboy.on('finish', () => resolve(new UploadedFiles($key, files, body)));
 
                     // Pipe to request
                     req.pipe(busboy);

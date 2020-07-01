@@ -13,8 +13,9 @@ class UploadedFile {
     /**
      * Accept all needed data from file process
      * @param {object} data
+     * @param body
      */
-    constructor(data) {
+    constructor(data, body= {}) {
         const extensions = data.expectedExtensions;
 
         if (typeof data.input === "string" && data.input.length) {
@@ -33,6 +34,7 @@ class UploadedFile {
         this.expectedMimetype = data.expectedMimetype || undefined;
         this.expectedExtensions = (Array.isArray(extensions) && extensions.length) ? extensions : [];
         this.reachedLimit = data.reachedLimit || false;
+        this.body = body;
     }
 
     /**
@@ -346,6 +348,7 @@ class UploadedFile {
 }
 
 UploadedFile.prototype.name = undefined;
+UploadedFile.prototype.body = {};
 UploadedFile.prototype.input = undefined;
 UploadedFile.prototype.encoding = undefined;
 UploadedFile.prototype.mimetype = undefined;
