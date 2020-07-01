@@ -104,3 +104,18 @@ $.router.post('/multiple_upload', async (http) => {
     });
 });
 ```
+
+## Form Body
+The body of the form is returned by `http.file` and `http.files` function
+```javascript
+const image = http.file('fieldname');
+
+console.log(image.body)
+
+// OR
+
+const files = http.files(['fieldname1', 'fieldname2']);
+
+console.log(files.body)
+
+```
