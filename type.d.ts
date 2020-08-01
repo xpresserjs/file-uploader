@@ -185,7 +185,7 @@ declare namespace Xpresser {
             mimetype?: string | RegExp,
             extensions?: string[],
             includeBody?: boolean,
-        }): Promise<UploadedFiles>
+        }): Promise<UploadedFile>
 
         /**
          * Get multiple files from post request.
