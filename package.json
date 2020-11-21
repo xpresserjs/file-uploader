@@ -2,13 +2,14 @@
   "name": "@xpresser/file-uploader",
   "version": "0.1.17",
   "main": "index.js",
+  "types": "type.d.ts",
   "description": "File uploader for XpresserJs framework",
   "license": "MIT",
   "dependencies": {
     "busboy": "^0.3.1"
   },
   "devDependencies": {
-    "xpresser": "^0.2.44"
+    "xpresser": "^0.3.24"
   },
   "private": false,
   "repository": "https://github.com/xpresserjs/file-uploader.git",

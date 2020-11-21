@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const PathHelper = require('xpresser/dist/src/Helpers/Path');
 
+
 /**
  * Mime2ext
  * A json file with over 500+ mimetypes matching their various extensions.
@@ -183,6 +184,8 @@ class UploadedFile {
      * @returns {Promise<boolean>}
      */
     saveTo($folder = undefined, $opts = {}) {
+        const $ = global['xpresserInstance']();
+
 
         // If type $folder is object we assume is the option that is being passed.
         if (typeof $folder === "object") {

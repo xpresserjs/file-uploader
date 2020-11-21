@@ -6,9 +6,10 @@ const UploadedFile = require("../UploadedFile");
 const UploadedFiles = require("../UploadedFiles");
 const mime2ext = require("../mime2ext");
 
+
 /**
  * RequestEngine Extender
- * @param RequestEngine
+ * @param {Xpresser.Http} RequestEngine
  */
 module.exports = (RequestEngine) => {
     return class extends RequestEngine {
@@ -19,6 +20,7 @@ module.exports = (RequestEngine) => {
          * @returns {Promise<UploadedFile>}
          */
         file($key, $opts = {}) {
+            const $ = this.$instance();
 
             // Assign default option values.
             $opts = Object.assign({
@@ -138,7 +140,7 @@ module.exports = (RequestEngine) => {
                              * if file extension using mimetype matches array of extensions provided.
                              * @type {boolean}
                              */
-                            let extensionIsValid = false;
+                            let extensionIsValid;
                             const expectedExtensions = $opts.extensions;
 
                             if (expectedExtensions && Array.isArray(expectedExtensions) && expectedExtensions.length) {
@@ -241,6 +243,7 @@ module.exports = (RequestEngine) => {
          * @returns {Promise<UploadedFiles>}
          */
         files($key, $opts = {}) {
+            const $ = this.$nstance()
 
             const keyIsArray = Array.isArray($key);
 
