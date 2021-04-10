@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "nodemon": "^2.0.7",
-    "xpresser": "^0.3.24"
+    "xpresser": "^0.14.0"
   },
   "private": false,
   "repository": "https://github.com/xpresserjs/file-uploader.git",

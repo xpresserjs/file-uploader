@@ -2,9 +2,13 @@ const {init} = require('xpresser');
 
 const $ = init({
   name: "Test File Uploader",
-  env: process.env.NODE_ENV,
+  env: process.env.NODE_ENV || "development",
   
-  paths: {base: __dirname, backend: "base://"}
+  paths: {
+    base: __dirname,
+    backend: "base://",
+    storage: `${__dirname}/storage`
+  }
 });
 
 

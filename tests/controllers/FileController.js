@@ -2,6 +2,7 @@ const fs = require('fs');
 const {getInstance} = require('xpresser');
 const $ = getInstance();
 const uploadsFolder = $.path.storage('public');
+
 /**
  * FileController
  * @type {Xpresser.Controller.Object}
@@ -25,6 +26,9 @@ module.exports = {
     const files = $.file.readDirectory(uploadsFolder) || [];
     const data = [];
     
+    /**
+     * Loop through file and get stats
+     */
     for (const file of files) {
       const fullPath = uploadsFolder + '/' + file;
       const {birthtime} = fs.statSync(uploadsFolder + '/' + file);
@@ -45,7 +49,6 @@ module.exports = {
    */
   async uploadSingleFile(http) {
     /**
-     *
      * @type {UploadedFile}
      */
     const file = await http.file('avatar', {
@@ -90,7 +93,7 @@ module.exports = {
       
       return http.send({
         message: 'Upload encountered some errors',
-        filesWithErrors
+        filesWithErrors,
       });
     }
     
@@ -107,6 +110,9 @@ module.exports = {
    */
   delete(http) {
     try {
+      /**
+       * @type {string}
+       */
       const file = http.body('file');
       
       if (!file) return http.send('No file found in delete request!');
