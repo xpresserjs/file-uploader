@@ -243,7 +243,7 @@ module.exports = (RequestEngine) => {
          * @returns {Promise<UploadedFiles>}
          */
         files($key, $opts = {}) {
-            const $ = this.$nstance()
+            const $ = this.$instance()
 
             const keyIsArray = Array.isArray($key);
 

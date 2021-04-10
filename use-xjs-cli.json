@@ -1,0 +1,19 @@
+{
+  "dev": {
+    "main": "tests/server.js",
+    "start_cron": "node",
+    "start_server": "npx nodemon",
+    "start_console": "node",
+    "jobs_path": "backend/jobs"
+  },
+  "prod": {
+    "main": "tests/server.js",
+    "start_cron": "pm2 start",
+    "stop_cron": "pm2 stop",
+    "start_server": "pm2 start",
+    "stop_server": "pm2 stop",
+    "start_console": "node",
+    "jobs_path": "backend/jobs"
+  },
+  "async_cron_jobs": false
+}
