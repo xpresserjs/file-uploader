@@ -13,6 +13,8 @@ declare class UploadedFile {
     expectedInput: string;
     // Path to saved filed..
     path: string;
+    // body
+    body: Record<string, any>
     // Temp Path to file.
     tmpPath: string;
     // If file reached the max file size set.
@@ -27,7 +29,7 @@ declare class UploadedFile {
      * Runs various checks on data provided to know if there are any errors.
      * If there are no errors `false` is returned.
      */
-    error(): { type: string, message: string, expected?: string, received?: string } | boolean;
+    error(): { type: string, message: string, expected?: string, received?: string } | false;
 
     /**
      * Get extension using files mimetype.
@@ -131,7 +133,7 @@ declare class UploadedFile {
      * Holds save error if any and returns false if none.
      * @returns {string|boolean}
      */
-    saveError(): boolean | string;
+    saveError(): false | string;
 
     /**
      * Convert string to human readable text
@@ -147,6 +149,7 @@ type FunctionReturnsString = (file: UploadedFile) => string;
 declare class UploadedFiles {
     input: string;
     files: UploadedFile[];
+    body: Record<string, any>
 
     /**
      * Checks if this instance has any file.
