@@ -174,7 +174,7 @@ declare class UploadedFiles {
     saveFiles($folder?: string | FunctionReturnsString, $options?: object | FunctionReturnsString): Promise<boolean>;
 }
 
-declare namespace Xpresser {
+declare module "xpresser/types/http" {
     interface Http {
         /**
          * Get file from post request.
@@ -202,5 +202,3 @@ declare namespace Xpresser {
         }): Promise<UploadedFiles>
     }
 }
-
-export = Xpresser;
