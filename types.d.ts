@@ -29,7 +29,7 @@ declare class UploadedFile {
      * Runs various checks on data provided to know if there are any errors.
      * If there are no errors `false` is returned.
      */
-    error(): { type: string, message: string, expected?: string, received?: string } | false;
+    error(): { type: string, message: string, expected?: string, received?: string } | undefined;
 
     /**
      * Get extension using files mimetype.
