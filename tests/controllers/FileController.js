@@ -1,3 +1,5 @@
+const {sizeToString} = require( '../../index');
+
 const fs = require('fs');
 const {getInstance} = require('xpresser');
 const $ = getInstance();
@@ -31,12 +33,13 @@ module.exports = {
      */
     for (const file of files) {
       const fullPath = uploadsFolder + '/' + file;
-      const {birthtime} = fs.statSync(uploadsFolder + '/' + file);
+      const {birthtime, size} = fs.statSync(uploadsFolder + '/' + file);
       
       data.push({
         name: file,
         path: fullPath.replace($.path.base(), ''),
         added: birthtime,
+        size: sizeToString(size)
       });
     }
     
@@ -52,7 +55,7 @@ module.exports = {
      * @type {UploadedFile}
      */
     const file = await http.file('avatar', {
-      size: 2, // size in megabyte
+      size: 100, // size in megabyte
     });
     
     // Check for error
