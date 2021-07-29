@@ -56,6 +56,7 @@ module.exports = {
      */
     const file = await http.file('avatar', {
       size: 100, // size in megabyte
+      type: "image"
     });
     
     // Check for error
@@ -65,7 +66,7 @@ module.exports = {
     
     // Save File
     await file.saveTo(uploadsFolder);
-    
+    //
     // check for save error()
     if (!file.isSaved()) {
       return http.send(file.saveError());

@@ -36,6 +36,15 @@ class UploadedFile {
         this.expectedExtensions = (Array.isArray(extensions) && extensions.length) ? extensions : [];
         this.reachedLimit = data.reachedLimit || false;
         this.body = body;
+    
+        if (!this.reachedLimit && this.tmpPath && fs.existsSync(this.tmpPath)) {
+            try {
+                const {size} = fs.statSync(this.tmpPath);
+                this.size = size;
+            } catch (e) {
+                return console.log(e);
+            }
+        }
     }
 
     /**

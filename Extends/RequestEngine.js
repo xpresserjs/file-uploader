@@ -78,7 +78,6 @@ module.exports = (RequestEngine) => {
           
           // On Busboy file event we validate incoming file.
           busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
-            
             // if seen and fieldname matches the field we are looking for.
             if (!$seen && fieldname === $key) {
               // Set seen to true, so if another file event is received it will be ignored.
@@ -158,17 +157,28 @@ module.exports = (RequestEngine) => {
                     $.helpers.randomStr(50).toUpperCase();
                 // Get OS tmpDir
                 const saveTo = path.join(os.tmpdir(), tmpName);
+                // $.file.makeDirIfNotExist(saveTo, true);
                 // Add tmpPath to $data
                 $data['tmpPath'] = saveTo;
                 
                 // Create File Stream
-                const stream = fs.createWriteStream(saveTo);
+                const stream = fs.createWriteStream(saveTo, {flags: 'a+'});
                 file.pipe(stream);
+                
+                stream.on('error', (e) => {
+                  reject(e)
+                })
+                
+                // Resolve on finish
+                stream.on('finish', () => {
+                  resolve(new UploadedFile($data, body));
+                });
                 
                 /**
                  * On Busboy file limit event we try to unpipe, destroy stream and unlink file.
                  */
                 file.on('limit', () => {
+                  
                   $data['reachedLimit'] = true;
                   
                   try {
@@ -211,18 +221,9 @@ module.exports = (RequestEngine) => {
           
           // On Busboy finish we return UploadedFile
           busboy.on('finish', () => {
-            if (typeof $data === 'object') {
+            if (typeof $data === false) {
               // Recalculate size
-              if ($data.tmpPath) {
-                try {
-                  const {size} = fs.statSync($data.tmpPath);
-                  $data.size = size;
-                } catch (e) {
-                  return reject(e);
-                }
-              }
-              resolve(new UploadedFile($data, body));
-            } else {
+              
               /**
                * Else if no $data then we did not find the input the user defined.
                * The add the expectedInput key, The File class records an error once this key is found.
@@ -298,6 +299,8 @@ module.exports = (RequestEngine) => {
               body[key] = val;
             });
           }
+          
+          const pendingFiles = {};
           
           // On Busboy file event we validate incoming file.
           busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
@@ -402,6 +405,7 @@ module.exports = (RequestEngine) => {
                 // Create File Stream
                 const stream = fs.createWriteStream(saveTo);
                 file.pipe(stream);
+                files[saveTo] = false;
                 
                 /**
                  * On Busboy file limit event we try to unpipe, destroy stream and unlink file.
@@ -423,15 +427,21 @@ module.exports = (RequestEngine) => {
                   
                   file.resume();
                 });
-                
-                // Update size on each data event received
-                file.on('data', (data) => {
-                  $data['size'] = data.length;
-                });
-                
-                // On end add UploadedFile to files array
-                file.on('end', () => {
+  
+                stream.on('error', (e) => {
+                  reject(e)
+                })
+  
+                /**
+                 * Push uploaded file when it has completely uploaded.
+                 */
+                stream.on('finish', () => {
                   files.push(new UploadedFile($data));
+                  pendingFiles[saveTo] = true;
+                  
+                  if (Object.values(pendingFiles).every(v => v === true)) {
+                    resolve(new UploadedFiles($key, files, body));
+                  }
                 });
               } else {
                 /**
@@ -458,11 +468,6 @@ module.exports = (RequestEngine) => {
               file.resume();
             }
           });
-          
-          // On Busboy finish we return UploadedFile
-          busboy.on('finish',
-              () => resolve(new UploadedFiles($key, files, body)));
-          
           // Pipe to request
           req.pipe(busboy);
         } catch (e) {
