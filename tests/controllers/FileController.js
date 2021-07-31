@@ -6,6 +6,10 @@ const $ = getInstance();
 const uploadsFolder = $.path.storage('public');
 
 /**
+ * @typedef {import("../../xpresser")}
+ */
+
+/**
  * FileController
  * @type {Xpresser.Controller.Object}
  */
@@ -46,17 +50,13 @@ module.exports = {
     return http.view('index', {files: data});
   },
   
-  /**
-   * @param http {Xpresser.Http}
-   * @returns {Promise<Response<ResBody>|Xpresser.Http.Response|*>}
-   */
   async uploadSingleFile(http) {
     /**
      * @type {UploadedFile}
      */
     const file = await http.file('avatar', {
       size: 100, // size in megabyte
-      type: "image"
+      mimetype: "image"
     });
     
     // Check for error
@@ -78,7 +78,6 @@ module.exports = {
   
   /**
    * @param http {Xpresser.Http}
-   * @returns {Promise<Response<ResBody>|Xpresser.Http.Response|*>}
    */
   async uploadMultipleFiles(http) {
     /**

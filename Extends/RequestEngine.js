@@ -8,7 +8,7 @@ const mime2ext = require('../mime2ext');
 
 /**
  * RequestEngine Extender
- * @param {Xpresser.Http} RequestEngine
+ * @param {import('xpresser/src/RequestEngine')} RequestEngine
  */
 module.exports = (RequestEngine) => {
   return class extends RequestEngine {
@@ -54,6 +54,12 @@ module.exports = (RequestEngine) => {
            * @type {{}}
            */
           let body = {};
+          
+          /**
+           * This variable holds the state for the upload of the single file.
+           * @type {boolean}
+           */
+          let isStreamingFile = false;
           
           /**
            * Initialize busboy
@@ -165,9 +171,12 @@ module.exports = (RequestEngine) => {
                 const stream = fs.createWriteStream(saveTo, {flags: 'a+'});
                 file.pipe(stream);
                 
-                stream.on('error', (e) => {
-                  reject(e)
-                })
+                // Set streaming file to true.
+                stream.on('ready', () => {
+                  isStreamingFile = true;
+                });
+                
+                stream.on('error', reject);
                 
                 // Resolve on finish
                 stream.on('finish', () => {
@@ -221,7 +230,9 @@ module.exports = (RequestEngine) => {
           
           // On Busboy finish we return UploadedFile
           busboy.on('finish', () => {
-            if (typeof $data === false) {
+            if (typeof $data === 'object' && !isStreamingFile) {
+              resolve(new UploadedFile($data, body));
+            } else if (typeof $data === false) {
               // Recalculate size
               
               /**
@@ -427,11 +438,11 @@ module.exports = (RequestEngine) => {
                   
                   file.resume();
                 });
-  
+                
                 stream.on('error', (e) => {
-                  reject(e)
-                })
-  
+                  reject(e);
+                });
+                
                 /**
                  * Push uploaded file when it has completely uploaded.
                  */
