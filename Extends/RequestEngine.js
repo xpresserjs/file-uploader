@@ -60,6 +60,7 @@ module.exports = (RequestEngine) => {
            * @type {boolean}
            */
           let isStreamingFile = false;
+          let hasStreamedFile = false;
           
           /**
            * Initialize busboy
@@ -168,13 +169,9 @@ module.exports = (RequestEngine) => {
                 $data['tmpPath'] = saveTo;
                 
                 // Create File Stream
-                const stream = fs.createWriteStream(saveTo);
+                const stream = fs.createWriteStream(saveTo, {flags: 'a'});
                 file.pipe(stream);
-                
-                // Set streaming file to true.
-                stream.on('ready', () => {
-                  isStreamingFile = true;
-                });
+                isStreamingFile = true;
                 
                 stream.on('error', reject);
                 
