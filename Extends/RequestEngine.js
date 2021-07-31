@@ -168,7 +168,7 @@ module.exports = (RequestEngine) => {
                 $data['tmpPath'] = saveTo;
                 
                 // Create File Stream
-                const stream = fs.createWriteStream(saveTo, {flags: 'a+'});
+                const stream = fs.createWriteStream(saveTo);
                 file.pipe(stream);
                 
                 // Set streaming file to true.
