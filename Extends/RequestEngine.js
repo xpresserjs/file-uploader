@@ -232,7 +232,7 @@ module.exports = (RequestEngine) => {
           busboy.on('finish', () => {
             if (typeof $data === 'object' && !isStreamingFile) {
               resolve(new UploadedFile($data, body));
-            } else if (typeof $data === false) {
+            } else if ($data === false) {
               // Recalculate size
               
               /**

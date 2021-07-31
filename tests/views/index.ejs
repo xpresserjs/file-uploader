@@ -51,16 +51,17 @@
                 </div>
                 <div class="column">
                     <h4 class="is-size-5">Single file upload</h4>
-                    <form method="post" action="/" enctype="multipart/form-data">
+                    <form method="post" action="/" >
                         <div class="is-inline-block">
-                            <input type="file" name="avatar" class="p-2 fileInput">
+                            <input type="hidden" name="name" value="Xpresser"/>
+                            <input type="file" name="avata" class="p-2 fileInput">
                         </div>
                         <button type="submit" class="button is-info">Upload Avatar</button>
                     </form>
 
                     <h4 class="is-size-5 mt-6">Multiple file upload</h4>
                     <form action="/multiple_upload" enctype="multipart/form-data" method="POST">
-                        Select images: <input class="p-2 fileInput" type="file"  name="images" multiple>
+                        Select images: <input class="p-2 fileInput" type="file" accept="image/*" name="images" multiple>
                         <button type="submit" class="button is-info">Upload your images</button>
                     </form>
                 </div>
