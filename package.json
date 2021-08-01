@@ -1,6 +1,6 @@
 {
   "name": "@xpresser/file-uploader",
-  "version": "1.6.4",
+  "version": "1.7.0",
   "main": "index.js",
   "types": "type.d.ts",
   "description": "File uploader for XpresserJs framework",
