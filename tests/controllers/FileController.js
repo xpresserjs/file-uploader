@@ -1,9 +1,9 @@
-const {sizeToString} = require( '../../index');
+const { sizeToString } = require("../../index");
 
-const fs = require('fs');
-const {getInstance} = require('xpresser');
+const fs = require("fs");
+const { getInstance } = require("xpresser");
 const $ = getInstance();
-const uploadsFolder = $.path.storage('public');
+const uploadsFolder = $.path.storage("public");
 
 /**
  * @typedef {import("../../xpresser")}
@@ -15,11 +15,11 @@ const uploadsFolder = $.path.storage('public');
  */
 module.exports = {
   // Controller Name
-  name: 'FileController',
-  
+  name: "FileController",
+
   // Controller Default Service Error Handler.
-  e: (http, error) => http.status(401).send({error}),
-  
+  e: (http, error) => http.status(401).send({ error }),
+
   /**
    * Index Controller
    * @param http
@@ -31,39 +31,39 @@ module.exports = {
      */
     const files = $.file.readDirectory(uploadsFolder) || [];
     const data = [];
-    
+
     /**
      * Loop through file and get stats
      */
     for (const file of files) {
-      const fullPath = uploadsFolder + '/' + file;
-      const {birthtime, size} = fs.statSync(uploadsFolder + '/' + file);
-      
+      const fullPath = uploadsFolder + "/" + file;
+      const { birthtime, size } = fs.statSync(uploadsFolder + "/" + file);
+
       data.push({
         name: file,
-        path: fullPath.replace($.path.base(), ''),
+        path: fullPath.replace($.path.base(), ""),
         added: birthtime,
         size: sizeToString(size)
       });
     }
-    
-    return http.view('index', {files: data});
+
+    return http.view("index", { files: data });
   },
-  
+
   async uploadSingleFile(http) {
     /**
      * @type {UploadedFile}
      */
-    const file = await http.file('avatar', {
+    const file = await http.file("avatar", {
       size: 100, // size in megabyte
       mimetype: "image"
     });
-    
+
     // Check for error
     if (file.error()) {
       return http.send(file);
     }
-    
+
     // Save File
     await file.saveTo(uploadsFolder);
     //
@@ -71,11 +71,11 @@ module.exports = {
     if (!file.isSaved()) {
       return http.send(file.saveError());
     }
-    
+
     // return response.
     return http.redirectBack();
   },
-  
+
   /**
    * @param http {Xpresser.Http}
    */
@@ -83,30 +83,36 @@ module.exports = {
     /**
      * @type {UploadedFiles}
      */
-    const images = await http.files('images', {
+    const images = await http.files(["images", "docs"], {
       size: 1, // size in megabytes
-      mimetype: 'image',
+      // mimetype: "image"
+      mimetypeForEachField: {
+        images: "image",
+        docs: new RegExp("pdf|doc|txt")
+      }
     });
-    
+
     // check errors
     if (images.hasFilesWithErrors()) {
       const filesWithErrors = images.filesWithError();
-      
+
+      // console.log(images.filesWithoutError());
+
       // Do something with filesWithErrors
-      
+
       return http.send({
-        message: 'Upload encountered some errors',
-        filesWithErrors,
+        message: "Upload encountered some errors",
+        filesWithErrors
       });
     }
-    
+
     // Save all files to one folder
     await images.saveFiles(uploadsFolder);
-    
+
     // return response
     return http.redirectBack();
   },
-  
+
   /**
    * Delete File
    * @param http {Xpresser.Http}
@@ -116,15 +122,15 @@ module.exports = {
       /**
        * @type {string}
        */
-      const file = http.body('file');
-      
-      if (!file) return http.send('No file found in delete request!');
-      
+      const file = http.body("file");
+
+      if (!file) return http.send("No file found in delete request!");
+
       $.file.delete($.path.base(file));
-      
+
       return http.redirectBack();
     } catch (e) {
       return http.send(e.message);
     }
-  },
+  }
 };
