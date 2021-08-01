@@ -63,21 +63,25 @@ class UploadedFiles {
   saveFiles($folder = undefined, $options = {}) {
     const folderIsFunction = typeof $folder === "function";
     const optionsIsFunction = typeof $options === "function";
-    return new Promise(async (resolve, reject) => {
-      for (const file of this.files) {
-        if (!file.error()) {
-          try {
-            const thisFolder = folderIsFunction ? $folder(file) : $folder;
-            const thisOptions = optionsIsFunction ? $options(file) : $options;
+    return new Promise((resolve, reject) => {
+      const tasks = [];
 
-            await file.saveTo(thisFolder, thisOptions);
-          } catch (e) {
-            return reject(e);
-          }
+      for (const file of this.filesWithoutError()) {
+        try {
+          const thisFolder = folderIsFunction ? $folder(file) : $folder;
+          const thisOptions = optionsIsFunction ? $options(file) : $options;
+
+          tasks.push(file.saveTo(thisFolder, thisOptions));
+        } catch (e) {
+          return reject(e);
         }
       }
 
-      return resolve(true);
+      if (!tasks.length) return resolve(false);
+
+      Promise.all(tasks)
+        .then(() => resolve(true))
+        .catch(reject);
     });
   }
 }

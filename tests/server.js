@@ -16,6 +16,7 @@ $.on.boot((next) => {
   $.router.get("/", "File@index");
   $.router.post("/", "File@uploadSingleFile");
   $.router.post("/delete", "File@delete");
+  $.router.post("/flush", "File@flush");
   $.router.post("/multiple_upload", "File@uploadMultipleFiles");
 
   return next();

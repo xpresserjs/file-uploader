@@ -88,17 +88,13 @@ module.exports = {
       // mimetype: "image"
       mimetypeForEachField: {
         images: "image",
-        docs: new RegExp("pdf|doc|txt")
+        docs: new RegExp("(pdf|doc|txt)")
       }
     });
 
     // check errors
     if (images.hasFilesWithErrors()) {
       const filesWithErrors = images.filesWithError();
-
-      // console.log(images.filesWithoutError());
-
-      // Do something with filesWithErrors
 
       return http.send({
         message: "Upload encountered some errors",
@@ -128,6 +124,17 @@ module.exports = {
 
       $.file.delete($.path.base(file));
 
+      return http.redirectBack();
+    } catch (e) {
+      return http.send(e.message);
+    }
+  },
+
+  flush(http) {
+    try {
+      $.file.deleteDirectory(uploadsFolder, { recursive: true });
+
+      console.log(uploadsFolder);
       return http.redirectBack();
     } catch (e) {
       return http.send(e.message);
