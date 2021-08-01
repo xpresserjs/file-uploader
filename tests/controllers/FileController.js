@@ -59,6 +59,8 @@ module.exports = {
       mimetype: "image"
     });
 
+    // console.log(file);
+
     // Check for error
     if (file.error()) {
       return http.send(file);
@@ -86,9 +88,14 @@ module.exports = {
     const images = await http.files(["images", "docs"], {
       size: 1, // size in megabytes
       // mimetype: "image"
-      mimetypeForEachField: {
-        images: "image",
-        docs: new RegExp("(pdf|doc|txt)")
+      // mimetypeForEachField: {
+      //   images: "image",
+      //   docs: new RegExp("(pdf|doc|txt)")
+      // },
+
+      extensionsForEachField: {
+        images: ["png", "gif"],
+        docs: ["pdf"]
       }
     });
 

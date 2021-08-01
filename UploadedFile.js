@@ -128,7 +128,7 @@ class UploadedFile {
    * @returns {*|boolean}
    */
   extension() {
-    return mime2ext[this.mimetype] || false;
+    return mime2ext[this.mimetype] || this.name.split(".").pop();
   }
 
   /**
@@ -145,9 +145,7 @@ class UploadedFile {
      * Append '.' to mine if mine !== false
      * else return false.
      */
-    const mime = this.extension();
-    if (mime) return "." + mime;
-    return false;
+    return "." + this.extension();
   }
 
   /**
