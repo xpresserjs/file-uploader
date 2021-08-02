@@ -272,7 +272,7 @@ class UploadedFile {
           this.name = fileName;
 
           // Delete file from temp folder.
-          this.deleteFromTmpDir();
+          this.discard();
 
           return resolve(true);
         });
@@ -284,14 +284,13 @@ class UploadedFile {
   }
 
   /**
-   * Delete From Temp Directory
+   * Deletes From Temp Directory
    *
-   * Should in any case there was a file unlink error after saving
-   * the temp file may still be in your temp folder.
-   * This function deletes it.
+   * Should in any case, you no longer want to use uploaded file,
+   * You can discard it.
    * @returns {boolean}
    */
-  deleteFromTmpDir() {
+  discard() {
     if (fs.existsSync(this.tmpPath)) {
       try {
         fs.unlinkSync(this.tmpPath);
@@ -314,16 +313,6 @@ class UploadedFile {
    */
   isSaved() {
     return this.stats.copied;
-  }
-
-  /**
-   * isMoved
-   *
-   * Check if file has been deleted from tmpPath.
-   * @returns {boolean}
-   */
-  isMoved() {
-    return this.stats.moved;
   }
 
   /**

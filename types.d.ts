@@ -113,7 +113,7 @@ declare class UploadedFile {
    * This function deletes it.
    * @returns {boolean}
    */
-  deleteFromTmpDir(): boolean;
+  discard(): boolean;
 
   /**
    * isSaved.
@@ -122,14 +122,6 @@ declare class UploadedFile {
    * @returns {boolean}
    */
   isSaved(): boolean;
-
-  /**
-   * isMoved
-   *
-   * Check if file has been deleted from tmpPath.
-   * @returns {boolean}
-   */
-  isMoved(): boolean;
 
   /**
    * saveError
