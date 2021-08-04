@@ -4,7 +4,6 @@ const os = require("os");
 const path = require("path");
 const UploadedFile = require("../UploadedFile");
 const UploadedFiles = require("../UploadedFiles");
-const FileType = require("file-type");
 
 /**
  * RequestEngine Extender
@@ -93,12 +92,6 @@ module.exports = (RequestEngine) => {
 
               filename = String(filename).trim();
               let $ext = filename.split(".").pop().toLowerCase();
-
-              try {
-                const { ext, mime } = await FileType.fromStream(file);
-                mimetype = mime;
-                filename = filename.substr(0, filename.length - $ext.length) + ext;
-              } catch {}
 
               // Set default data attributes.
               $data = {
@@ -353,12 +346,6 @@ module.exports = (RequestEngine) => {
               filename
             ) {
               let $ext = filename.split(".").pop().toLowerCase();
-
-              try {
-                const { ext, mime } = await FileType.fromStream(file);
-                mimetype = mime;
-                filename = filename.substr(0, filename.length - $ext.length) + ext;
-              } catch {}
 
               // Set default data attributes.
               $data = {

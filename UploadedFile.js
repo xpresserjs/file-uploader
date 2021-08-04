@@ -343,6 +343,7 @@ class UploadedFile {
 }
 
 UploadedFile.prototype.name = undefined;
+UploadedFile.prototype.ext = undefined;
 UploadedFile.prototype.body = {};
 UploadedFile.prototype.input = undefined;
 UploadedFile.prototype.encoding = undefined;
