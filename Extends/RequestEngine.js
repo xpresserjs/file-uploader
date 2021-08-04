@@ -304,7 +304,7 @@ module.exports = (RequestEngine) => {
            * Initialize busboy
            *
            * passing req.headers and setting limits
-           * @type {Busboy}
+           * @type {busboy.Busboy}
            */
           const busboy = new Busboy({
             headers: req["headers"],
