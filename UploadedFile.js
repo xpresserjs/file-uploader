@@ -126,7 +126,7 @@ class UploadedFile {
    * @returns {*|boolean}
    */
   extension() {
-    return this.name.split(".").pop();
+    return this.name.split(".").pop().toLowerCase();
   }
 
   /**
