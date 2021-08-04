@@ -55,7 +55,7 @@ module.exports = {
      * @type {UploadedFile}
      */
     const file = await http.file("avatar", {
-      size: 1, // size in megabyte
+      size: 5, // size in megabyte
       mimetype: new RegExp("audio|image")
     });
 
@@ -86,7 +86,7 @@ module.exports = {
      * @type {UploadedFiles}
      */
     const images = await http.files(["images", "docs"], {
-      size: 1, // size in megabytes
+      size: 5, // size in megabytes
       // mimetype: "image"
       // mimetypeForEachField: {
       //   images: "image",

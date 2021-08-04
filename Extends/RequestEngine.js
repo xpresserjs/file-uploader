@@ -92,14 +92,12 @@ module.exports = (RequestEngine) => {
               $seen = true;
 
               filename = String(filename).trim();
-              let fileType = {
-                ext: filename.split(".").pop().toLowerCase(),
-                mime: mimetype
-              };
+              let $ext = filename.split(".").pop().toLowerCase();
 
               try {
-                fileType = await FileType.fromStream(file);
-                mimetype = fileType.mime;
+                const { ext, mime } = await FileType.fromStream(file);
+                mimetype = mime;
+                filename = filename.substr(0, filename.length - $ext.length) + ext;
               } catch {}
 
               // Set default data attributes.
@@ -168,7 +166,7 @@ module.exports = (RequestEngine) => {
                 expectedExtensions.length
               ) {
                 $data["expectedExtensions"] = expectedExtensions;
-                const extByMimetype = fileType.ext || false;
+                const extByMimetype = $ext || false;
                 extensionIsValid = !!(
                   extByMimetype && expectedExtensions.includes(extByMimetype)
                 );
@@ -354,14 +352,12 @@ module.exports = (RequestEngine) => {
               (fieldname === $key || (keyIsArray && $key.includes(fieldname))) &&
               filename
             ) {
-              let fileType = {
-                ext: filename.split(".").pop().toLowerCase(),
-                mime: mimetype
-              };
+              let $ext = filename.split(".").pop().toLowerCase();
 
               try {
-                fileType = await FileType.fromStream(file);
-                mimetype = fileType.mime;
+                const { ext, mime } = await FileType.fromStream(file);
+                mimetype = mime;
+                filename = filename.substr(0, filename.length - $ext.length) + ext;
               } catch {}
 
               // Set default data attributes.
@@ -446,7 +442,7 @@ module.exports = (RequestEngine) => {
                 /**
                  * @type {(boolean | string)}}
                  */
-                const extByMimetype = fileType.ext || false;
+                const extByMimetype = $ext || false;
                 extensionIsValid = !!(
                   extByMimetype &&
                   typeof extByMimetype === "string" &&

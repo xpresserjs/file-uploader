@@ -6,8 +6,6 @@ const PathHelper = require("xpresser/dist/src/Helpers/Path");
  * Mime2ext
  * A json file with over 500+ mimetypes matching their various extensions.
  */
-const mime2ext = require("./mime2ext");
-
 class UploadedFile {
   /**
    * Accept all needed data from file process
@@ -128,7 +126,7 @@ class UploadedFile {
    * @returns {*|boolean}
    */
   extension() {
-    return mime2ext[this.mimetype] || this.name.split(".").pop();
+    return this.name.split(".").pop();
   }
 
   /**
