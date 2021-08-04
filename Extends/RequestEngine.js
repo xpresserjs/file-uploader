@@ -4,7 +4,7 @@ const os = require("os");
 const path = require("path");
 const UploadedFile = require("../UploadedFile");
 const UploadedFiles = require("../UploadedFiles");
-const mime2ext = require("../mime2ext");
+const FileType = require("file-type");
 
 /**
  * RequestEngine Extender
@@ -67,7 +67,7 @@ module.exports = (RequestEngine) => {
            * Initialize busboy
            *
            * passing req.headers and setting limits
-           * @type {Busboy}
+           * @type {busboy.Busboy}
            */
           const busboy = new Busboy({
             headers: req["headers"],
@@ -85,17 +85,28 @@ module.exports = (RequestEngine) => {
           }
 
           // On Busboy file event we validate incoming file.
-          busboy.on("file", (fieldname, file, filename, encoding, mimetype) => {
+          busboy.on("file", async (fieldname, file, filename, encoding, mimetype) => {
             // if seen and fieldname matches the field we are looking for.
             if (!$seen && fieldname === $key) {
               // Set seen to true, so if another file event is received it will be ignored.
               $seen = true;
 
+              filename = String(filename).trim();
+              let fileType = {
+                ext: filename.split(".").pop().toLowerCase(),
+                mime: mimetype
+              };
+
+              try {
+                fileType = await FileType.fromStream(file);
+                mimetype = fileType.mime;
+              } catch {}
+
               // Set default data attributes.
               $data = {
                 expectedInput: $key,
                 input: fieldname,
-                name: String(filename).trim().length ? filename : undefined,
+                name: filename,
                 encoding,
                 mimetype,
                 size: 0
@@ -157,7 +168,7 @@ module.exports = (RequestEngine) => {
                 expectedExtensions.length
               ) {
                 $data["expectedExtensions"] = expectedExtensions;
-                const extByMimetype = mime2ext[mimetype] || false;
+                const extByMimetype = fileType.ext || false;
                 extensionIsValid = !!(
                   extByMimetype && expectedExtensions.includes(extByMimetype)
                 );
@@ -230,7 +241,7 @@ module.exports = (RequestEngine) => {
 
           // On Busboy finish we return UploadedFile
           busboy.on("finish", () => {
-            if (typeof $data === "object" && !isStreamingFile) {
+            if (typeof $data === "object" && (!isStreamingFile || $data.reachedLimit)) {
               resolve(new UploadedFile($data, body));
             } else if ($data === false) {
               // Recalculate size
@@ -327,7 +338,7 @@ module.exports = (RequestEngine) => {
           }
 
           // On Busboy file event we validate incoming file.
-          busboy.on("file", (fieldname, file, filename, encoding, mimetype) => {
+          busboy.on("file", async (fieldname, file, filename, encoding, mimetype) => {
             /**
              * $data holds this process data.
              * @type {object|boolean}
@@ -343,11 +354,21 @@ module.exports = (RequestEngine) => {
               (fieldname === $key || (keyIsArray && $key.includes(fieldname))) &&
               filename
             ) {
+              let fileType = {
+                ext: filename.split(".").pop().toLowerCase(),
+                mime: mimetype
+              };
+
+              try {
+                fileType = await FileType.fromStream(file);
+                mimetype = fileType.mime;
+              } catch {}
+
               // Set default data attributes.
               $data = {
                 expectedInput: fieldname,
                 input: fieldname,
-                name: String(filename).trim().length ? filename : undefined,
+                name: filename,
                 encoding,
                 mimetype,
                 size: 0
@@ -425,7 +446,7 @@ module.exports = (RequestEngine) => {
                 /**
                  * @type {(boolean | string)}}
                  */
-                const extByMimetype = mime2ext[mimetype] || false;
+                const extByMimetype = fileType.ext || false;
                 extensionIsValid = !!(
                   extByMimetype &&
                   typeof extByMimetype === "string" &&
@@ -454,6 +475,8 @@ module.exports = (RequestEngine) => {
                  */
                 file.on("limit", () => {
                   $data["reachedLimit"] = true;
+                  delete pendingFiles[saveTo];
+                  files.push(new UploadedFile($data));
 
                   try {
                     // try unpipe and destroy steam.

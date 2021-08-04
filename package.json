@@ -9,9 +9,11 @@
     "test": "npx nodemon ./tests/server.js"
   },
   "dependencies": {
-    "busboy": "^0.3.1"
+    "busboy": "^0.3.1",
+    "file-type": "^16.5.3"
   },
   "devDependencies": {
+    "@types/busboy": "^0.2.4",
     "nodemon": "^2.0.12",
     "prettier": "^2.3.2",
     "xpresser": "^0.19.2"
