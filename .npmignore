@@ -6,3 +6,4 @@ use-xjs-cli.json
 *.ts
 # include the .d.ts files
 !*.d.ts
+!tsconfig.json
