@@ -3,10 +3,6 @@ import path = require("path");
 import { FileData, FileUploadError, SaveOptions } from "./types";
 const PathHelper = require("xpresser/dist/src/Helpers/Path");
 
-/**
- * Mime2ext
- * A json file with over 500+ mimetypes matching their various extensions.
- */
 class UploadedFile {
   name: string;
   body: Record<string, any> = {};

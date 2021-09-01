@@ -90,7 +90,6 @@ module.exports = {
       //   images: "image",
       //   docs: new RegExp("(pdf|doc|txt)")
       // },
-
       extensionsForEachField: {
         images: ["png", "gif"],
         docs: ["pdf", "mp3"]

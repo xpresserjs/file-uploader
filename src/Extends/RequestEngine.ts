@@ -10,12 +10,30 @@ import { FileData, MultipleFilesOptions, SingleFileOptions } from "../types";
 export = function (RE: typeof RequestEngine): any {
   return class extends RE {
     /**
+     * Check if request is multipart form.
+     */
+    isMultiPartFormData() {
+      const headers = this.req.headers;
+
+      if (!headers.hasOwnProperty("content-type")) return false;
+
+      const contentType = headers["content-type"] || "";
+
+      return (
+        contentType.includes("multipart/form-data") && contentType.includes("boundary")
+      );
+    }
+
+    /**
      * Single File Upload
      * @returns {Promise<UploadedFile.ts>}
      * @param fieldName
      * @param options
      */
     file(fieldName: string, options: Partial<SingleFileOptions> = {}) {
+      if (!this.isMultiPartFormData())
+        throw "Request must be of type multipart/form-data";
+
       return new Promise((resolve, reject) => {
         // Get Xpresser Instance
         const $ = this.$instance();
@@ -251,6 +269,9 @@ export = function (RE: typeof RequestEngine): any {
      * @returns {Promise<UploadedFiles.ts>}
      */
     files(fields: string | string[], options: MultipleFilesOptions = {}) {
+      if (!this.isMultiPartFormData())
+        throw "Request must be of type multipart/form-data";
+
       return new Promise((resolve, reject) => {
         const $ = this.$instance();
 
@@ -315,7 +336,10 @@ export = function (RE: typeof RequestEngine): any {
             if (!filename.length) return file.resume();
 
             // if not seen and fieldname matches the field we are looking for.
-            if (($isArrayOfFields && !fields.includes(fieldname)) || fieldname !== fields)
+            if (
+              !($isArrayOfFields && fields.includes(fieldname)) &&
+              !(fieldname === fields)
+            )
               return file.resume();
 
             // if seen and fieldname matches the field we are looking for.

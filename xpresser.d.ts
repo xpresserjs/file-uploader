@@ -6,6 +6,11 @@ import { MultipleFilesOptions, SingleFileOptions } from "./src/types";
 declare module "xpresser/types/http" {
   interface Http {
     /**
+     * Check if request if od type multipart/form-data"
+     */
+    isMultiPartFormData(): boolean;
+
+    /**
      * Get Single Field
      * @param field
      * @param $options
