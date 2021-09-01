@@ -1,12 +1,23 @@
+import UploadedFile from "./UploadedFile";
+import {
+  FunctionThatReturnsSaveOptions,
+  FunctionThatReturnsString,
+  SaveOptions
+} from "./types";
+
 class UploadedFiles {
-  input = "";
+  body: Record<string, any> = {};
+  input: string | string[];
   /**
    * Holds each UploadedFile
-   * @type {UploadedFile[]}
    */
-  files = [];
+  files: UploadedFile[] = [];
 
-  constructor(input, files = [], body = {}) {
+  constructor(
+    input: string | string[],
+    files: UploadedFile[] = [],
+    body: Record<string, any> = {}
+  ) {
     if (!Array.isArray(files))
       throw TypeError(`UploadFiles expects files to be an Array`);
 
@@ -17,7 +28,6 @@ class UploadedFiles {
 
   /**
    * Checks if this instance has any file.
-   * @returns {boolean}
    */
   hasFiles() {
     return this.files.length > 0;
@@ -25,7 +35,6 @@ class UploadedFiles {
 
   /**
    * Checks if any file has error.
-   * @returns {boolean}
    */
   hasFilesWithErrors() {
     return this.files.some((file) => file.error());
@@ -33,7 +42,6 @@ class UploadedFiles {
 
   /**
    * Checks if any file has error.
-   * @returns {boolean}
    */
   hasFilesWithoutErrors() {
     return this.files.some((file) => !file.error());
@@ -41,7 +49,6 @@ class UploadedFiles {
 
   /**
    * Returns Array of files with error.
-   * @returns {UploadedFile[]}
    */
   filesWithError() {
     return this.files.filter((file) => file.error());
@@ -49,7 +56,6 @@ class UploadedFiles {
 
   /**
    * Returns Array of files without error.
-   * @returns {UploadedFile[]}
    */
   filesWithoutError() {
     return this.files.filter((file) => !file.error());
@@ -60,9 +66,13 @@ class UploadedFiles {
    * @param $folder
    * @param $options
    */
-  saveFiles($folder = undefined, $options = {}) {
+  saveFiles(
+    $folder: string | FunctionThatReturnsString<UploadedFile>,
+    $options?: SaveOptions | FunctionThatReturnsSaveOptions<UploadedFile>
+  ) {
     const folderIsFunction = typeof $folder === "function";
     const optionsIsFunction = typeof $options === "function";
+
     return new Promise((resolve, reject) => {
       const tasks = [];
 
@@ -84,8 +94,22 @@ class UploadedFiles {
         .catch(reject);
     });
   }
+
+  /**
+   * Discards files with Errors
+   */
+  discardFilesWithError() {
+    this.filesWithError().forEach((f) => f.discard());
+    return this;
+  }
+
+  /**
+   * Discards files with Errors
+   */
+  discardTempFiles() {
+    this.files.forEach((f) => f.discard());
+    return this;
+  }
 }
 
-UploadedFiles.prototype.body = {};
-
-module.exports = UploadedFiles;
+export = UploadedFiles;

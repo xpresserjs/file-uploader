@@ -1,5 +1,6 @@
-const fs = require("fs");
-const path = require("path");
+import fs = require("fs");
+import path = require("path");
+import { FileData, FileUploadError, SaveOptions } from "./types";
 const PathHelper = require("xpresser/dist/src/Helpers/Path");
 
 /**
@@ -7,28 +8,43 @@ const PathHelper = require("xpresser/dist/src/Helpers/Path");
  * A json file with over 500+ mimetypes matching their various extensions.
  */
 class UploadedFile {
+  name: string;
+  body: Record<string, any> = {};
+  input: string;
+  encoding: string;
+  mimetype: string;
+  size: number = 0;
+  path?: string;
+  tmpPath?: string;
+  private readonly expectedInput: string;
+  private readonly expectedMimetype?: string | RegExp;
+  private readonly expectedExtensions: string[];
+  private readonly reachedLimit: boolean;
+
+  private stats = {
+    copied: false,
+    moved: false,
+    movedTo: null as null | string,
+    error: false as false | string
+  };
+  private cachedError?: FileUploadError;
+
   /**
    * Accept all needed data from file process
-   * @param {object} data
+   * @param data
    * @param body
    */
-  constructor(data, body = {}) {
+  constructor(data: FileData, body = {}) {
     const extensions = data.expectedExtensions;
 
-    if (typeof data.input === "string" && data.input.length) {
-      this.input = data.input;
-    }
-
-    if (typeof data.name === "string" && data.name.length) {
-      this.name = data.name;
-    }
-
-    this.tmpPath = data.tmpPath || undefined;
-    this.encoding = data.encoding || undefined;
-    this.mimetype = data.mimetype || undefined;
+    this.input = data.input;
+    this.name = data.name;
+    this.tmpPath = data.tmpPath;
+    this.encoding = data.encoding;
+    this.mimetype = data.mimetype;
     this.size = data.size || 0;
-    this.expectedInput = data.expectedInput || undefined;
-    this.expectedMimetype = data.expectedMimetype || undefined;
+    this.expectedInput = data.expectedInput;
+    this.expectedMimetype = data.expectedMimetype;
     this.expectedExtensions =
       Array.isArray(extensions) && extensions.length ? extensions : [];
     this.reachedLimit = data.reachedLimit || false;
@@ -39,7 +55,7 @@ class UploadedFile {
         const { size } = fs.statSync(this.tmpPath);
         this.size = size;
       } catch (e) {
-        return console.log(e);
+        console.log(e);
       }
     }
   }
@@ -49,15 +65,15 @@ class UploadedFile {
    *
    * Runs various checks on data provided to know if there are any errors.
    * If there are no errors `false` is returned.
-   * @returns {{expected: *, received: *, type: string, message: string}|{expected: *, received: Object.input, type: string, message: string}|{type: string, message: string}|boolean}
    */
   error() {
     /**
      * If cachedError is not null then this instance has saved an error before.
      */
-    if (this.cachedError !== null) return this.cachedError;
+    if (this.cachedError) return this.cachedError;
 
-    let error = false;
+    let error: FileUploadError | undefined = undefined;
+
     /**
      * --- Rules
      * 1. If expectedInput and the input received is not the same
@@ -106,7 +122,7 @@ class UploadedFile {
     ) {
       const received = this.extension();
       error = {
-        type: "extensions",
+        type: "extension",
         expected: this.expectedExtensions,
         received,
         message: `Unsupported file extension: ${received}`
@@ -123,10 +139,9 @@ class UploadedFile {
   /**
    * Get extension using files mimetype.
    * Returns false if mimetype is not found.
-   * @returns {*|boolean}
    */
   extension() {
-    return this.name.split(".").pop().toLowerCase();
+    return this.name.split(".").pop()!.toLowerCase();
   }
 
   /**
@@ -135,7 +150,6 @@ class UploadedFile {
    * E.g
    * file.extension() => 'png'
    * file.dotExtension() => '.png'
-   * @returns {string|boolean}
    */
   dotExtension() {
     /**
@@ -152,7 +166,7 @@ class UploadedFile {
    * e.g file.extensionMatch('png')
    * @param $extension
    */
-  extensionMatch($extension) {
+  extensionMatch($extension: string | string[]) {
     if (typeof $extension === "string") {
       return $extension === this.extension();
     } else if (Array.isArray($extension)) {
@@ -168,7 +182,7 @@ class UploadedFile {
    * e.g file.dotExtensionMatch('.png')
    * @param $extension
    */
-  dotExtensionMatch($extension) {
+  dotExtensionMatch($extension: string | string[]) {
     if (typeof $extension === "string") {
       return $extension === this.dotExtension();
     } else if (Array.isArray($extension)) {
@@ -190,26 +204,15 @@ class UploadedFile {
    * @param $opts
    * @returns {Promise<boolean>}
    */
-  saveTo($folder = undefined, $opts = {}) {
-    const $ = global["xpresserInstance"]();
-
-    // If type $folder is object we assume is the option that is being passed.
-    if (typeof $folder === "object") {
-      $opts = $folder;
-      $folder = undefined;
-    }
-
-    // Set Default options
-    $opts = Object.assign(
-      {
-        name: undefined,
-        overwrite: true,
-        prependExtension: false
-      },
-      $opts
-    );
-
+  saveTo($folder: string, $opts: SaveOptions = {}) {
     return new Promise((resolve) => {
+      // Set Default options
+      $opts = {
+        overwrite: true,
+        prependExtension: false,
+        ...$opts
+      };
+
       /**
        * If tmpPath is defined, proceed else record a tmpPath not defined error.
        */
@@ -218,11 +221,6 @@ class UploadedFile {
         if (!fs.existsSync(this.tmpPath)) {
           this.stats.error = "tmpPath file not found.";
           return resolve(false);
-        }
-
-        // Set default path to xpresser storage folder if $folder is undefined
-        if ($folder === undefined) {
-          $folder = $.path.storage();
         }
 
         let fileName = this.name;
@@ -252,12 +250,10 @@ class UploadedFile {
 
         let flags = null;
 
-        if (!$opts.overwrite) {
-          flags = fs.constants.COPYFILE_EXCL;
-        }
+        const onCopyFile = (err: any) => {
+          // Delete file from temp folder.
+          this.discard();
 
-        // Copy UploadedFile to destination folder.
-        fs.copyFile(this.tmpPath, filePath, flags, (err) => {
           // Record error and return false.
           if (err) {
             this.stats.error = err.message;
@@ -269,12 +265,20 @@ class UploadedFile {
           this.path = filePath;
           this.name = fileName;
 
-          // Delete file from temp folder.
-          this.discard();
-
           return resolve(true);
-        });
+        };
+
+        if ($opts.overwrite) {
+          flags = fs.constants.COPYFILE_EXCL;
+          fs.copyFile(this.tmpPath, filePath, flags, onCopyFile);
+        } else {
+          // Copy UploadedFile to destination folder.
+          fs.copyFile(this.tmpPath, filePath, onCopyFile);
+        }
       } else {
+        // Delete file from temp folder.
+        this.discard();
+
         this.stats.error = "tmpPath not defined.";
         return resolve(false);
       }
@@ -289,15 +293,16 @@ class UploadedFile {
    * @returns {boolean}
    */
   discard() {
+    if (!this.tmpPath || this.stats.moved) return true;
+
     if (fs.existsSync(this.tmpPath)) {
       try {
         fs.unlinkSync(this.tmpPath);
         this.stats.moved = true;
+        this.tmpPath = undefined;
       } catch (e) {
         this.stats.moved = false;
       }
-    } else {
-      this.stats.moved = true;
     }
 
     return this.stats.moved;
@@ -342,25 +347,4 @@ class UploadedFile {
   }
 }
 
-UploadedFile.prototype.name = undefined;
-UploadedFile.prototype.ext = undefined;
-UploadedFile.prototype.body = {};
-UploadedFile.prototype.input = undefined;
-UploadedFile.prototype.encoding = undefined;
-UploadedFile.prototype.mimetype = undefined;
-UploadedFile.prototype.size = 0;
-UploadedFile.prototype.expectedInput = undefined;
-UploadedFile.prototype.expectedMimetype = undefined;
-UploadedFile.prototype.expectedExtensions = [];
-UploadedFile.prototype.path = undefined;
-UploadedFile.prototype.tmpPath = undefined;
-UploadedFile.prototype.reachedLimit = false;
-UploadedFile.prototype.stats = {
-  copied: false,
-  moved: false,
-  movedTo: null,
-  error: false
-};
-UploadedFile.prototype.cachedError = null;
-
-module.exports = UploadedFile;
+export = UploadedFile;

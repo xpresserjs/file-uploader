@@ -1,4 +1,4 @@
-const { sizeToString } = require("../../index");
+const { sizeToString } = require("../../");
 
 const fs = require("fs");
 const { getInstance } = require("xpresser");
@@ -58,8 +58,6 @@ module.exports = {
       size: 5, // size in megabyte
       mimetype: new RegExp("audio|image")
     });
-
-    // console.log(file);
 
     // Check for error
     if (file.error()) {

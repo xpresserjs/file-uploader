@@ -1,37 +1,25 @@
 import "xpresser/types/http";
-import { UploadedFile, UploadedFiles } from "./types";
+import UploadedFile = require("./src/UploadedFile");
+import UploadedFiles = require("./src/UploadedFiles");
+import { MultipleFilesOptions, SingleFileOptions } from "./src/types";
 
 declare module "xpresser/types/http" {
   interface Http {
     /**
-     * Get file from post request.
-     * @return {Promise<UploadedFile>}
+     * Get Single Field
+     * @param field
+     * @param $options
      */
-    file(
-      field: string,
-      $options?: {
-        size?: number;
-        mimetype?: string | RegExp;
-        extensions?: string[];
-        includeBody?: boolean;
-      }
-    ): Promise<UploadedFile>;
+    file(field: string, $options?: SingleFileOptions): Promise<UploadedFile>;
 
     /**
-     * Get multiple files from post request.
-     * @return {Promise<UploadedFiles>}
+     * Get Multiple Fields
+     * @param field
+     * @param $options
      */
     files(
       field: string | string[],
-      $options?: {
-        files?: number;
-        size?: number;
-        mimetype?: string | RegExp;
-        extensions?: string[];
-        includeBody?: boolean;
-        mimetypeForEachField?: { [field: string]: string | RegExp };
-        extensionsForEachField?: { [field: string]: string[] };
-      }
+      $options?: MultipleFilesOptions
     ): Promise<UploadedFiles>;
   }
 }

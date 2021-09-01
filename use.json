@@ -1,6 +1,6 @@
 {
   "namespace": "@xpresser/file-uploader",
   "extends": {
-    "RequestEngine": "Extends/RequestEngine.js"
+    "RequestEngine": "js/src/Extends/RequestEngine.js"
   }
 }
