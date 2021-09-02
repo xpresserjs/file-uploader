@@ -2,8 +2,9 @@ node_modules
 tests
 storage
 use-xjs-cli.json
+tsconfig.json
+
 # ignore the .ts files
 *.ts
 # include the .d.ts files
 !*.d.ts
-!tsconfig.json
