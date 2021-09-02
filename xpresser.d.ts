@@ -1,7 +1,7 @@
 import "xpresser/types/http";
-import UploadedFile = require("./src/UploadedFile");
-import UploadedFiles = require("./src/UploadedFiles");
-import { MultipleFilesOptions, SingleFileOptions } from "./src/types";
+import UploadedFile = require("./js/src/UploadedFile");
+import UploadedFiles = require("./js/src/UploadedFiles");
+import { MultipleFilesOptions, SingleFileOptions } from "./js/src/types";
 
 declare module "xpresser/types/http" {
   interface Http {
