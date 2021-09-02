@@ -1,20 +1,20 @@
-const { sizeToString } = require("../../");
+import { sizeToString, uploadFiles, uploadFile } from "../../";
+import fs = require("fs");
+import { getInstance } from "xpresser";
+import { Controller, Http } from "xpresser/types/http";
 
-const fs = require("fs");
-const { getInstance } = require("xpresser");
 const $ = getInstance();
 const uploadsFolder = $.path.storage("public");
 
 /**
  * FileController
- * @type {Xpresser.Controller.Object}
  */
-module.exports = {
+export = <Controller.Object>{
   // Controller Name
   name: "FileController",
 
   // Controller Default Service Error Handler.
-  e: (http, error) => http.status(401).send({ error }),
+  e: (http: Http, error: unknown) => http.status(401).send({ error }),
 
   /**
    * Index Controller
@@ -47,17 +47,14 @@ module.exports = {
   },
 
   async uploadSingleFile(http) {
-    /**
-     * @type {UploadedFile}
-     */
-    const file = await http.file("avatar", {
+    const file = await uploadFile(http, "avatar", {
       size: 5, // size in megabyte
       mimetype: new RegExp("audio|image")
     });
 
     // Check for error
     if (file.error()) {
-      return http.send(file);
+      return http.send({ file, error: file.error() });
     }
 
     // Save File
@@ -76,22 +73,11 @@ module.exports = {
    * @param http {Xpresser.Http}
    */
   async uploadMultipleFiles(http) {
-    /**
-     * @type {UploadedFiles}
-     */
-    const images = await http.files(["images", "docs"], {
-      size: 5, // size in megabytes
-      // mimetype: "image"
-      // mimetypeForEachField: {
-      //   images: "image",
-      //   docs: new RegExp("(pdf|doc|txt)")
-      // },
+    const images = await uploadFiles(http, ["images", "docs"], {
       extensionsForEachField: {
         images: ["png", "gif"],
         docs: ["pdf", "mp3"]
-      },
-
-      customErrors: {}
+      }
     });
 
     // check errors
@@ -120,7 +106,7 @@ module.exports = {
       /**
        * @type {string}
        */
-      const file = http.body("file");
+      const file = http.body<string>("file");
 
       if (!file) return http.send("No file found in delete request!");
 
@@ -128,18 +114,19 @@ module.exports = {
 
       return http.redirectBack();
     } catch (e) {
-      return http.send(e.message);
+      return http.send((e as Error).message);
     }
   },
 
   flush(http) {
     try {
+      // @ts-ignore
       $.file.deleteDirectory(uploadsFolder, { recursive: true });
 
       console.log(uploadsFolder);
       return http.redirectBack();
     } catch (e) {
-      return http.send(e.message);
+      return http.send((e as Error).message);
     }
   }
 };

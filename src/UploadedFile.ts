@@ -1,21 +1,32 @@
 import fs = require("fs");
 import path = require("path");
-import { FileData, FileUploadError, SaveOptions } from "./types";
+import { CustomErrors, FileData, FileUploadError, SaveOptions } from "./types";
+
 const PathHelper = require("xpresser/dist/src/Helpers/Path");
+
+function setPrivately<S>(source: S, data: Record<string, any>, writable = true) {
+  Object.entries(data).forEach(([key, value]) => {
+    Object.defineProperty(source, key, {
+      value,
+      enumerable: false,
+      writable
+    });
+  });
+}
 
 class UploadedFile {
   name: string;
   body: Record<string, any> = {};
-  input: string;
+  field: string;
   encoding: string;
   mimetype: string;
   size: number = 0;
   path?: string;
   tmpPath?: string;
-  private readonly expectedInput: string;
+  private readonly expectedField!: string;
   private readonly expectedMimetype?: string | RegExp;
-  private readonly expectedExtensions: string[];
-  private readonly reachedLimit: boolean;
+  private readonly expectedExtensions!: string[];
+  private readonly reachedLimit!: boolean;
   private cachedError?: FileUploadError;
   private stats = {
     copied: false,
@@ -23,27 +34,34 @@ class UploadedFile {
     movedTo: null as null | string,
     error: false as false | string
   };
+  private customErrors?: CustomErrors;
 
   /**
    * Accept all needed data from file process
    * @param data
    * @param body
+   * @param customErrors
    */
-  constructor(data: FileData, body = {}) {
+  constructor(data: FileData, body = {}, customErrors?: CustomErrors) {
     const extensions = data.expectedExtensions;
 
-    this.input = data.input;
+    this.field = data.field;
     this.name = data.name;
     this.tmpPath = data.tmpPath;
     this.encoding = data.encoding;
     this.mimetype = data.mimetype;
     this.size = data.size || 0;
-    this.expectedInput = data.expectedInput;
-    this.expectedMimetype = data.expectedMimetype;
-    this.expectedExtensions =
-      Array.isArray(extensions) && extensions.length ? extensions : [];
-    this.reachedLimit = data.reachedLimit || false;
     this.body = body;
+
+    setPrivately(this, {
+      stats: this.stats,
+      customErrors,
+      cachedError: this.cachedError,
+      expectedField: data.expectedField,
+      expectedMimetype: data.expectedMimetype,
+      reachedLimit: data.reachedLimit || false,
+      expectedExtensions: Array.isArray(extensions) && extensions.length ? extensions : []
+    });
 
     if (!this.reachedLimit && this.tmpPath && fs.existsSync(this.tmpPath)) {
       try {
@@ -71,7 +89,7 @@ class UploadedFile {
 
     /**
      * --- Rules
-     * 1. If expectedInput and the input received is not the same
+     * 1. If expectedField and the field received is not the same
      * we record an Input not found error.
      *
      * 2. if no file is received, busboy returns  empty name and size.
@@ -87,33 +105,37 @@ class UploadedFile {
      * 5. if expectedExtensions does not match extension,
      * we record Unsupported file extension error
      */
-    if (this.expectedInput !== this.input) {
+    if (this.expectedField !== this.field) {
       error = {
-        type: "input",
-        input: this.expectedInput,
-        expected: this.expectedInput,
-        received: this.input,
-        message: `Input not found: ${this.expectedInput}`
+        type: "field",
+        filename: this.name,
+        field: this.expectedField,
+        expected: this.expectedField,
+        received: this.field,
+        message: `Field: "${this.expectedField}" not found`
       };
-    } else if (this.input && !this.name && !this.size) {
+    } else if (this.field && !this.name && !this.size) {
       error = {
         type: "file",
-        input: this.input,
-        message: `No file found for input: ${this.input}`
+        field: this.field,
+        filename: this.name,
+        message: `No file found for input: ${this.field}`
       };
     } else if (this.reachedLimit) {
       error = {
         type: "size",
-        input: this.input,
-        message: `File too large.`
+        field: this.field,
+        filename: this.name,
+        message: `File: "${this.name}" is too large.`
       };
     } else if (this.expectedMimetype) {
       error = {
         type: "mimetype",
-        input: this.input,
+        field: this.field,
+        filename: this.name,
         expected: this.expectedMimetype,
         received: this.mimetype,
-        message: `Expected mimetype does not match file mimetype: ${this.mimetype}`
+        message: `File: "${this.name}" mimetype does not match the expected mimetype: ${this.expectedMimetype}`
       };
     } else if (
       this.expectedExtensions.length &&
@@ -122,11 +144,25 @@ class UploadedFile {
       const received = this.extension();
       error = {
         type: "extension",
-        input: this.input,
+        field: this.field,
+        filename: this.name,
         expected: this.expectedExtensions,
         received,
-        message: `Unsupported file extension: ${received}`
+        message: `File: "${this.name}" has unsupported file extension`
       };
+    }
+
+    // Use defined error messages
+    if (this.customErrors && error) {
+      let customError = this.customErrors[error.type];
+
+      if (typeof customError === "function") {
+        customError = customError(error);
+      }
+
+      if (typeof customError === "string") {
+        error.message = customError;
+      }
     }
 
     // Cache error so this check does not have to re-run
@@ -269,11 +305,11 @@ class UploadedFile {
         };
 
         if ($opts.overwrite) {
-          flags = fs.constants.COPYFILE_EXCL;
-          fs.copyFile(this.tmpPath, filePath, flags, onCopyFile);
-        } else {
           // Copy UploadedFile to destination folder.
           fs.copyFile(this.tmpPath, filePath, onCopyFile);
+        } else {
+          flags = fs.constants.COPYFILE_EXCL;
+          fs.copyFile(this.tmpPath, filePath, flags, onCopyFile);
         }
       } else {
         // Delete file from temp folder.

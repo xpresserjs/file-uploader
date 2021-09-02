@@ -1,4 +1,4 @@
-const { init } = require("xpresser");
+import { init } from "xpresser";
 
 const $ = init({
   name: "Test File Uploader",
@@ -10,6 +10,8 @@ const $ = init({
     storage: `${__dirname}/storage`
   }
 });
+
+$.initializeTypescript(__filename);
 
 /** Add Routes **/
 $.on.boot((next) => {

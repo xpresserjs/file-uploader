@@ -9,7 +9,7 @@
     "prepublishOnly": "npm run build",
     "watch": "npx tsc --watch",
     "build": "npx tsc",
-    "test": "cd tests && npx nodemon ./server.js --watch '../js' --ext 'js'"
+    "test": "cd tests && npx ts-node-dev --respawn ./server.ts"
   },
   "dependencies": {
     "busboy": "^0.3.1"

@@ -1,17 +1,16 @@
 import UploadedFile from "./UploadedFile";
 
 export type FileUploadError = {
-  type: "input" | "file" | "size" | "mimetype" | "extension";
-  input: string;
+  type: "field" | "file" | "size" | "mimetype" | "extension";
+  field: string;
+  filename: string;
   message: string;
   expected?: any;
   received?: string;
 };
 
-type CustomErrors = {
-  [key in FileUploadError["type"]]?:
-    | string
-    | ((err: FileUploadError, file: UploadedFile) => string);
+export type CustomErrors = {
+  [key in FileUploadError["type"]]?: string | ((err: FileUploadError) => string);
 };
 
 export type SingleFileOptions = Partial<{
@@ -28,20 +27,20 @@ export type MultipleFilesOptions = Partial<{
   mimetype: string | RegExp;
   extensions: string[];
   includeBody: boolean;
-  mimetypeForEachField: Record<string, any>;
-  extensionsForEachField: Record<string, any>;
+  mimetypeForEachField: Record<string, string | RegExp>;
+  extensionsForEachField: Record<string, string[]>;
   customErrors: CustomErrors;
 }>;
 
 export type FileData = {
   tmpPath?: string;
-  input: string;
+  field: string;
   name: string;
   encoding: string;
   mimetype: string;
   size: number;
   reachedLimit?: boolean;
-  expectedInput: string;
+  expectedField: string;
   expectedExtensions?: string[];
   expectedMimetype?: string | RegExp;
 };

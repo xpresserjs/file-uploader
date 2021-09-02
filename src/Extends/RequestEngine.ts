@@ -115,8 +115,8 @@ export = function (RE: typeof RequestEngine): typeof RequestEngine {
 
             // Set default data attributes.
             $data = {
-              expectedInput: fieldName,
-              input: fieldname,
+              expectedField: fieldName,
+              field: fieldname,
               name: filename,
               encoding,
               mimetype,
@@ -197,7 +197,7 @@ export = function (RE: typeof RequestEngine): typeof RequestEngine {
 
               // Resolve on finish
               stream.on("finish", () => {
-                resolve(new UploadedFile($data as FileData, $body));
+                resolve(new UploadedFile($data as FileData, $body, $opts.customErrors));
               });
 
               /**
@@ -243,13 +243,19 @@ export = function (RE: typeof RequestEngine): typeof RequestEngine {
           // On Busboy finish we return UploadedFile
           busboy.on("finish", () => {
             if (typeof $data === "object" && (!$isStreamingFile || $data.reachedLimit)) {
-              resolve(new UploadedFile($data, $body));
+              resolve(new UploadedFile($data, $body, $opts.customErrors));
             } else if ($data === false) {
               /**
-               * Else if no $data then we did not find the input the user defined.
-               * The add the expectedInput key, The File class records an error once this key is found.
+               * Else if no $data then we did not find the field the user defined.
+               * The add the expectedField key, The File class records an error once this key is found.
                */
-              resolve(new UploadedFile({ expectedInput: fieldName } as any, $body));
+              resolve(
+                new UploadedFile(
+                  { expectedField: fieldName } as any,
+                  $body,
+                  $opts.customErrors
+                )
+              );
             }
           });
 
@@ -342,8 +348,8 @@ export = function (RE: typeof RequestEngine): typeof RequestEngine {
 
             // Set default data attributes.
             $data = {
-              expectedInput: fieldname,
-              input: fieldname,
+              expectedField: fieldname,
+              field: fieldname,
               name: filename,
               encoding,
               mimetype,
@@ -445,7 +451,9 @@ export = function (RE: typeof RequestEngine): typeof RequestEngine {
               file.on("limit", () => {
                 $data.reachedLimit = true;
                 delete pendingFiles[saveTo];
-                $files.push(new UploadedFile($data as FileData));
+                $files.push(
+                  new UploadedFile($data as FileData, {}, options.customErrors)
+                );
 
                 try {
                   // try unpipe and destroy steam.
@@ -470,7 +478,7 @@ export = function (RE: typeof RequestEngine): typeof RequestEngine {
                * Push uploaded file when it has completely uploaded.
                */
               stream.on("finish", () => {
-                $files.push(new UploadedFile($data));
+                $files.push(new UploadedFile($data, {}, options.customErrors));
                 pendingFiles[saveTo] = true;
 
                 if (hasUploadedPendingFiles()) {
@@ -491,7 +499,7 @@ export = function (RE: typeof RequestEngine): typeof RequestEngine {
               if (!extensionIsValid) $data["expectedExtensions"] = expectedExtensions;
 
               // Push file data to files
-              $files.push(new UploadedFile($data));
+              $files.push(new UploadedFile($data, {}, options.customErrors));
 
               // Resume file upload.
               file.resume();
@@ -512,3 +520,32 @@ export = function (RE: typeof RequestEngine): typeof RequestEngine {
     }
   };
 };
+
+/**
+ * Declare Types
+ */
+declare module "xpresser/types/http" {
+  interface Http {
+    /**
+     * Check if request if od type multipart/form-data"
+     */
+    isMultiPartFormData(): boolean;
+
+    /**
+     * Get Single Field
+     * @param field
+     * @param $options
+     */
+    file(field: string, $options?: SingleFileOptions): Promise<UploadedFile>;
+
+    /**
+     * Get Multiple Fields
+     * @param field
+     * @param $options
+     */
+    files(
+      field: string | string[],
+      $options?: MultipleFilesOptions
+    ): Promise<UploadedFiles>;
+  }
+}

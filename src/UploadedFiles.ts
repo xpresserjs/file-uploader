@@ -7,21 +7,21 @@ import {
 
 class UploadedFiles {
   body: Record<string, any> = {};
-  input: string | string[];
+  fields: string | string[];
   /**
    * Holds each UploadedFile
    */
   files: UploadedFile[] = [];
 
   constructor(
-    input: string | string[],
+    fields: string | string[],
     files: UploadedFile[] = [],
     body: Record<string, any> = {}
   ) {
     if (!Array.isArray(files))
       throw TypeError(`UploadFiles expects files to be an Array`);
 
-    this.input = input;
+    this.fields = fields;
     this.files = files;
     this.body = body;
   }
@@ -109,6 +109,13 @@ class UploadedFiles {
   discardTempFiles() {
     this.files.forEach((f) => f.discard());
     return this;
+  }
+
+  /**
+   * Get all error messages of files with error.
+   */
+  errorMessages() {
+    return this.filesWithError().map((f) => f.error()!.message);
   }
 }
 
