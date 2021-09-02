@@ -28,3 +28,5 @@ declare module "xpresser/types/http" {
     ): Promise<UploadedFiles>;
   }
 }
+
+export = typeof import("xpresser/types/http");

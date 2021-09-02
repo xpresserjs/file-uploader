@@ -6,10 +6,6 @@ const $ = getInstance();
 const uploadsFolder = $.path.storage("public");
 
 /**
- * @typedef {import("../../xpresser")}
- */
-
-/**
  * FileController
  * @type {Xpresser.Controller.Object}
  */
@@ -22,7 +18,7 @@ module.exports = {
 
   /**
    * Index Controller
-   * @param http
+   * @param http {Xpresser.Http}
    * @returns {*}
    */
   index(http) {
@@ -93,7 +89,9 @@ module.exports = {
       extensionsForEachField: {
         images: ["png", "gif"],
         docs: ["pdf", "mp3"]
-      }
+      },
+
+      customErrors: {}
     });
 
     // check errors

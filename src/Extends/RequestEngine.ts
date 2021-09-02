@@ -7,8 +7,8 @@ import UploadedFiles = require("../UploadedFiles");
 import type RequestEngine from "xpresser/src/RequestEngine";
 import { FileData, MultipleFilesOptions, SingleFileOptions } from "../types";
 
-export = function (RE: typeof RequestEngine): any {
-  return class extends RE {
+export = function (RE: typeof RequestEngine): typeof RequestEngine {
+  return class XpresserFileUploader extends RE {
     /**
      * Check if request is multipart form.
      */
@@ -41,9 +41,7 @@ export = function (RE: typeof RequestEngine): any {
         // Assign default option values.
         const $opts = {
           size: 5,
-          mimetype: false,
           includeBody: true,
-          extensions: false,
           ...options
         };
 
@@ -140,7 +138,7 @@ export = function (RE: typeof RequestEngine): any {
              */
             let mimetypeIsValid = !expectedMimetype;
 
-            if (expectedMimetype !== false) {
+            if (expectedMimetype) {
               /**
                * - Check if mimetype option is a regex expression
                * if true and regex test is true set mimetypeIsValid = true
@@ -275,7 +273,7 @@ export = function (RE: typeof RequestEngine): any {
       return new Promise((resolve, reject) => {
         const $ = this.$instance();
 
-        const $isArrayOfFields = Array.isArray(fields);
+        if (typeof fields === "string") fields = [fields];
 
         // if no size set default to 5MB
         options.size = (options.size || 5) * 1000000;
@@ -336,11 +334,7 @@ export = function (RE: typeof RequestEngine): any {
             if (!filename.length) return file.resume();
 
             // if not seen and fieldname matches the field we are looking for.
-            if (
-              !($isArrayOfFields && fields.includes(fieldname)) &&
-              !(fieldname === fields)
-            )
-              return file.resume();
+            if (!fields.includes(fieldname)) return file.resume();
 
             // if seen and fieldname matches the field we are looking for.
 

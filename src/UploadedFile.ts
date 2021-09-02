@@ -16,14 +16,13 @@ class UploadedFile {
   private readonly expectedMimetype?: string | RegExp;
   private readonly expectedExtensions: string[];
   private readonly reachedLimit: boolean;
-
+  private cachedError?: FileUploadError;
   private stats = {
     copied: false,
     moved: false,
     movedTo: null as null | string,
     error: false as false | string
   };
-  private cachedError?: FileUploadError;
 
   /**
    * Accept all needed data from file process
@@ -91,6 +90,7 @@ class UploadedFile {
     if (this.expectedInput !== this.input) {
       error = {
         type: "input",
+        input: this.expectedInput,
         expected: this.expectedInput,
         received: this.input,
         message: `Input not found: ${this.expectedInput}`
@@ -98,16 +98,19 @@ class UploadedFile {
     } else if (this.input && !this.name && !this.size) {
       error = {
         type: "file",
+        input: this.input,
         message: `No file found for input: ${this.input}`
       };
     } else if (this.reachedLimit) {
       error = {
         type: "size",
+        input: this.input,
         message: `File too large.`
       };
     } else if (this.expectedMimetype) {
       error = {
         type: "mimetype",
+        input: this.input,
         expected: this.expectedMimetype,
         received: this.mimetype,
         message: `Expected mimetype does not match file mimetype: ${this.mimetype}`
@@ -119,6 +122,7 @@ class UploadedFile {
       const received = this.extension();
       error = {
         type: "extension",
+        input: this.input,
         expected: this.expectedExtensions,
         received,
         message: `Unsupported file extension: ${received}`
