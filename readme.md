@@ -41,9 +41,9 @@ export function upload(http: Http){
     size: 1,
     customErrors: {
       field: (err) =>  `field not found: ${err.field}`,
-      file: (err) = `No file found for field: ${err.field}`,
+      file: (err) => `No file found for field: ${err.field}`,
       size: "File is too large", // can also be plain string.
-      mimetype: (err) => `File: "${err.filename}" mimetype does not match the expected mimetype: ${err.recieved}`,
+      mimetype: (err) => `File: "${err.filename}" mimetype does not match the expected mimetype: ${err.expected}`,
       extension: (err) => `File: "${err.filename}" has unsupported file extension`
     }
   });
