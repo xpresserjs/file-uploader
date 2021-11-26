@@ -1,7 +1,7 @@
 import { init } from "xpresser";
 
 const $ = init({
-  name: "Test File Uploader",
+  name: "@xpresser/file-uploader",
   env: process.env.NODE_ENV || "development",
 
   paths: {

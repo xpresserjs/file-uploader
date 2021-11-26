@@ -59,7 +59,7 @@ export = <Controller.Object>{
 
     // Save File
     await file.saveTo(uploadsFolder);
-    //
+
     // check for save error()
     if (!file.isSaved()) {
       return http.send(file.saveError());
@@ -74,6 +74,7 @@ export = <Controller.Object>{
    */
   async uploadMultipleFiles(http) {
     const images = await uploadFiles(http, ["images", "docs"], {
+      size: 100,
       extensionsForEachField: {
         images: ["png", "gif"],
         docs: ["pdf", "mp3"]
@@ -86,7 +87,8 @@ export = <Controller.Object>{
 
       return http.send({
         message: "Upload encountered some errors",
-        filesWithErrors
+        filesWithErrors,
+        errors: images.errorMessages()
       });
     }
 
@@ -122,11 +124,9 @@ export = <Controller.Object>{
     try {
       // @ts-ignore
       $.file.deleteDirectory(uploadsFolder, { recursive: true });
-
-      console.log(uploadsFolder);
       return http.redirectBack();
-    } catch (e) {
-      return http.send((e as Error).message);
+    } catch (e: any) {
+      return http.send(e.message);
     }
   }
 };

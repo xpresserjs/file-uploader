@@ -5,7 +5,8 @@ import path = require("path");
 import UploadedFile = require("../UploadedFile");
 import UploadedFiles = require("../UploadedFiles");
 import type RequestEngine from "xpresser/src/RequestEngine";
-import { FileData, MultipleFilesOptions, SingleFileOptions } from "../types";
+import type { FileData, MultipleFilesOptions, SingleFileOptions } from "../types";
+import type { BusboyHeaders } from "busboy";
 
 export = function (RE: typeof RequestEngine): typeof RequestEngine {
   return class XpresserFileUploader extends RE {
@@ -81,7 +82,7 @@ export = function (RE: typeof RequestEngine): typeof RequestEngine {
            * passing req.headers and setting limits
            */
           const busboy = new Busboy({
-            headers: req["headers"],
+            headers: req["headers"] as BusboyHeaders,
             limits: {
               files: 1,
               fileSize: $opts.size
@@ -304,7 +305,7 @@ export = function (RE: typeof RequestEngine): typeof RequestEngine {
            * @type {busboy.Busboy}
            */
           const busboy = new Busboy({
-            headers: req["headers"],
+            headers: req["headers"] as BusboyHeaders,
             limits: {
               files: options.files,
               fileSize: options.size
