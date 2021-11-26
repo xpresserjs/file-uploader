@@ -8,9 +8,9 @@ application storage folder.
 Documentation: [xpresserjs.com](https://xpresserjs.com/plugins/@xpresser/file-uploader/)
 
 # Next
-**NPM:** `npm i @xpresser/file-uploader@next`
+**NPM:** `npm i @xpresser/file-uploader`
 
-**YARN:** `yarn i @xpresser/file-uploader@next`
+**YARN:** `yarn i @xpresser/file-uploader`
 
 This package has been converted to TypeScript.
 
