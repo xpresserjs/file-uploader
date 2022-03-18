@@ -173,6 +173,14 @@ class UploadedFile {
   }
 
   /**
+   * Get File Name without extension
+   */
+  nameWithoutExtension() {
+    const parse = path.parse(this.name);
+    return parse.name;
+  }
+
+  /**
    * Get extension using files mimetype.
    * Returns false if mimetype is not found.
    */

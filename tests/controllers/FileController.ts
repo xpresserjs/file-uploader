@@ -49,7 +49,7 @@ export = <Controller.Object>{
   async uploadSingleFile(http) {
     const file = await uploadFile(http, "avatar", {
       size: 5, // size in megabyte
-      mimetype: new RegExp("audio|image")
+      mimetype: new RegExp("audio|image|zip")
     });
 
     // Check for error
